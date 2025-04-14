@@ -1,0 +1,70 @@
+# 操作系统生成的文件
+.DS_Store
+Thumbs.db
+
+# IDE 配置文件
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 日志文件
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 临时文件和缓存
+*.log
+.cache/
+.turbo/
+.nx/
+.nx/cache/
+.local/
+.eslintcache
+
+# 自动生成的文件
+types/auto-imports.d.ts
+types/components.d.ts
+onnxruntime_profile__*
+
+# 忽略子项目的构建输出
+SmartCommunity-Admin-main/node_modules/
+SmartCommunity-Admin-main/dist/
+SmartCommunity-Admin-main/tests/server/static/
+SmartCommunity-Admin-main/tests/server/static/upload/
+
+SmartCommunity-Back-main/target/
+SmartCommunity-Back-main/build/
+
+# 忽略环境变量文件
+SmartCommunity-Admin-main/.env.local
+SmartCommunity-Admin-main/.env.*.local
+
+# 忽略 Maven 和 Java 项目相关文件
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+*.ipr
+*.iws
+*.project
+*.classpath
+*.factorypath
+*.settings/
+*.springBeans
+*.sts4-cache
+
+# 忽略 NetBeans 相关文件
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# 忽略 Python 缓存文件
+SmartCommunity-Admin-main/src/api/split/__pycache__/
