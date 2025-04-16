@@ -6,6 +6,7 @@ from camel.types import ModelPlatformType
 import json
 
 # === 模型初始化 ===
+
 model = ModelFactory.create(
     model_platform=ModelPlatformType.OPENAI_COMPATIBLE_MODEL,
     model_type="gpt-4.1",
@@ -16,7 +17,9 @@ model = ModelFactory.create(
     }
 )
 
+
 # === 火灾报警信息 ===
+
 fire_alarm_info = """
 火灾发生地点：阳光花园小区，3号楼，5楼
 火势等级：中度（黑烟明显，有明火）
@@ -74,6 +77,7 @@ property_agent = ChatAgent(
 )
 
 # === 创建工作组 ===
+
 workforce = Workforce(
     description="社区火灾应急处理工作组",
     new_worker_agent_kwargs={'model': model},
@@ -82,6 +86,7 @@ workforce = Workforce(
 )
 
 # === 添加智能体角色 ===
+
 workforce.add_single_agent_worker(
     description="负责灭火和救援火场人员",
     worker=firefighter_agent,
@@ -96,8 +101,9 @@ workforce.add_single_agent_worker(
     worker=property_agent,
 )
 
-# === 创建任务 ===
-task = Task(
+# === 执行火灾响应主任务 ===
+
+task = workforce.process_task(Task(
     content=f"""
 火灾报警信息如下：
 
@@ -132,23 +138,99 @@ task = Task(
 不要输出任何解释文字，只输出 JSON。
 """,
     id="fire_task_001"
-)
+))
+import json
+import requests
 
-# === 执行任务 ===
-task = workforce.process_task(task)
+# === 解析火灾响应主任务结果 ===
 
-# === 尝试解析为JSON并保存 ===
 try:
     result_json = json.loads(task.result)
     with open("fire_response_result.json", "w", encoding="utf-8") as f:
         json.dump(result_json, f, ensure_ascii=False, indent=4)
-    print("结果已保存到 fire_response_result.json")
+    print("✅ 火灾响应 JSON 已保存")
 except json.JSONDecodeError:
-    print("解析 JSON 失败，请检查输出格式。")
+    print("❌ 火灾响应解析失败，保存为文本")
     with open("fire_response_result.txt", "w", encoding="utf-8") as f:
         f.write(task.result)
-    print("结果已保存到 fire_response_result.txt")
+    result_json = {}
+    print(task.result)
 
-# === 输出结果 ===
-print("火灾应急响应方案：")
-print(task.result)
+# === 构建 summary（仅使用阶段一简要概括） ===
+
+summary_data = []
+first_stage = result_json.get("阶段一", {})
+for role, tasks in first_stage.items():
+    summary_data.append({
+        "role": role,
+        "status": "已完成",
+        "summary": "，".join(tasks)
+    })
+
+# === 执行智能体任务：分析优先级和资源调配 ===
+
+priority_resource_task = Task(
+    content=f"""
+以下是当前的火灾报警信息：
+
+{fire_alarm_info}
+
+请你根据这次火灾的严重程度、人员情况和天气情况，提出：
+
+1. 火灾应急响应中的**任务优先级排序**（如：控制火源 > 疏散人员 > 保护财产 > 记录损失）
+2. 所需的关键**资源调配建议**（如消防车、救护车、安保人员、志愿者的数量和状态）
+
+请用如下 JSON 格式输出：
+
+{{
+  "priority": [
+    {{"level": "紧急", "task": "任务内容"}}
+  ],
+  "resources": [
+    {{"type": "资源类型", "status": "数量+状态描述"}}
+  ]
+}}
+
+不要输出任何解释文字，只返回 JSON。
+""",
+    id="fire_task_priority"
+)
+priority_resource_task = workforce.process_task(priority_resource_task)
+
+# === 解析优先级与资源调配结果 ===
+
+try:
+    priority_resource_json = json.loads(priority_resource_task.result)
+    priority_list = priority_resource_json.get("priority", [])
+    resources_allocation = priority_resource_json.get("resources", [])
+except json.JSONDecodeError:
+    print("❌ 无法解析优先级与资源调配 JSON，使用默认值。")
+    priority_list = [
+        {"level": "紧急", "task": "疏散被困人员"},
+        {"level": "紧急", "task": "控制火源蔓延"},
+        {"level": "中等", "task": "保护周边财产"},
+        {"level": "常规", "task": "记录损失情况"}
+    ]
+    resources_allocation = [
+        {"type": "消防车", "status": "2辆 已调派"},
+        {"type": "救护车", "status": "1辆 待命"},
+        {"type": "安保人员", "status": "4名 现场"},
+        {"type": "志愿者", "status": "6名 待命"}
+    ]
+
+# === 构造并上传 payload 到 Spring Boot ===
+
+payload = {
+    "stages": result_json,
+    "summary": summary_data,
+    "priority": priority_list,
+    "resources": resources_allocation
+}
+
+url = "http://localhost:8080/api/ai-assistant/receive-fire-response"
+response = requests.post(url, json=payload)
+
+if response.status_code == 200:
+    print("✅ 成功传输到 Spring Boot：", response.text)
+else:
+    print("❌ 传输失败，状态码:", response.status_code)
