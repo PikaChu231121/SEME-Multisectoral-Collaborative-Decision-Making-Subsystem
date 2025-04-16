@@ -129,4 +129,27 @@ public class AiAssistantController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating topic: " + e.getMessage());
         }
     }
+    @Operation(summary = "接收 CAMEL 智能体系统的火灾响应数据")
+    @PostMapping("/receive-fire-response")
+    public ResponseEntity<String> receiveFireResponse(@RequestBody FireResponseDTO fireResponseDTO) {
+        try {
+            System.out.println("🔥 收到火灾响应数据：");
+
+            // 更清晰地打印出每个阶段和角色的任务
+            fireResponseDTO.getStages().forEach((stage, roles) -> {
+                System.out.println("📌 " + stage + ":");
+                roles.forEach((role, tasks) -> {
+                    System.out.println("  👤 " + role + ":");
+                    for (String task : tasks) {
+                        System.out.println("    - " + task);
+                    }
+                });
+            });
+
+            return ResponseEntity.ok("✅ 火灾响应数据已成功接收！");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("❌ 数据接收失败：" + e.getMessage());
+        }
+    }
 }
