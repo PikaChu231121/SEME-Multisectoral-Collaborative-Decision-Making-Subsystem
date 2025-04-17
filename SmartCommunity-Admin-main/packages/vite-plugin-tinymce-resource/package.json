@@ -8,5 +8,7 @@
   "scripts": {
     "build": "tsc"
   },
-  "peerDependencies": {}
+  "dependencies": {
+    "@admin-pkg/vite-plugin-tinymce-resource": "file:"
+  }
 }

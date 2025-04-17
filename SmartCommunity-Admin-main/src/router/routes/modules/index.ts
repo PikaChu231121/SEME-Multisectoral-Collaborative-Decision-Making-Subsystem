@@ -12,7 +12,7 @@ import chat from './chat';
 import comment from './comment';
 import split from './split';
 import matp from './matp';
-
+import collaboration from './collaboration';
 export default [
   ...global,
   ...video,
@@ -20,6 +20,7 @@ export default [
   ...account,
   ...task,
   ...decision,
+  collaboration,
   ...detection,
   ...colmap,
   ...traffic,

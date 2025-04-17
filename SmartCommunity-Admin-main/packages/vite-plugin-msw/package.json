@@ -42,6 +42,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
+    "@admin-pkg/vite-plugin-msw": "file:",
     "@mswjs/interceptors": "^0.36.1",
     "headers-polyfill": "^4.0.3",
     "strict-event-emitter": "^0.5.1"

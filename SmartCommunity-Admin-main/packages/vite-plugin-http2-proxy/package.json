@@ -13,7 +13,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@admin-pkg/vite-plugin-http2-proxy": "file:",
     "http2-proxy": "^5.0.53"
-  },
-  "peerDependencies": {}
+  }
 }
