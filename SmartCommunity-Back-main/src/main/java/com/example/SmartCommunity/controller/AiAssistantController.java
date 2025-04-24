@@ -1,22 +1,19 @@
 package com.example.SmartCommunity.controller;
 
+import com.example.SmartCommunity.dto.FireResponseDTO;
 import com.example.SmartCommunity.dto.UserMessageDTO;
 import com.example.SmartCommunity.dto.UserMessageRequestDTO;
 import com.example.SmartCommunity.model.ChatTopic;
-import com.example.SmartCommunity.model.UserMessage;
 import com.example.SmartCommunity.service.AiAssistantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
-import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 
 import java.util.List;
 
