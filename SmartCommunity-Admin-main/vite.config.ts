@@ -91,17 +91,17 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
       }),
       // https://github.com/fi3ework/vite-plugin-checker
       isDev &&
-        checker({
-          typescript: true,
-          // vueTsc: true,
-          eslint: {
-            useFlatConfig: true,
-            lintCommand: 'eslint "./src/**/*.{.vue,ts,tsx}"', // for example, lint .ts & .tsx
-          },
-          overlay: {
-            initialIsOpen: false,
-          },
-        }),
+      checker({
+        typescript: true,
+        // vueTsc: true,
+        eslint: {
+          useFlatConfig: true,
+          lintCommand: 'eslint "./src/**/*.{.vue,ts,tsx}"', // for example, lint .ts & .tsx
+        },
+        overlay: {
+          initialIsOpen: false,
+        },
+      }),
       AutoImport({
         resolvers: [ElementPlusResolver()],
       }),
@@ -130,6 +130,11 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
           // target: 'http://127.0.0.1:7001/upload',
           changeOrigin: true,
           rewrite: (path) => path.replace(new RegExp(`^/upload`), ''),
+        },
+        '^/api': {
+          target: 'http://localhost:8080', // ✅ 你的 Spring Boot 后端端口
+          changeOrigin: true,
+          // rewrite: (path) => path.replace(/^\/api/, ''),
         },
       },
       // 提前转换和缓存文件以进行预热。可以在服务器启动时提高初始页面加载速度，并防止转换瀑布。
