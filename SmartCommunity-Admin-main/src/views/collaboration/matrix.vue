@@ -30,14 +30,38 @@
       <div class="main-content">
         <!-- 时间线表格 -->
         <div class="timeline-matrix">
-          <el-button type="primary" :loading="loading" @click="handleButtonClick" style="margin-bottom: 15px;">
-            {{ loading ? '刷新中' : '刷新数据' }}
-          </el-button>
-
-          <el-table :data="timelineData" border style="width: 100%; margin-bottom: 20px;">
-            <el-table-column prop="time" label="时间" width="150">
+          <div class="timeline-header">
+            <h3>应急处理时间线</h3>
+            <el-button type="primary" :loading="loading" @click="handleButtonClick" class="refresh-btn">
+              <i class="el-icon-refresh" v-if="!loading"></i>
+              {{ loading ? '刷新中...' : '刷新数据' }}
+            </el-button>
+          </div>
+          
+          <el-table 
+            :data="timelineData" 
+            border 
+            style="width: 100%; margin-bottom: 20px;"
+            class="timeline-table"
+            :header-cell-style="{
+              background: '#f5f7fa',
+              color: '#606266',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              textAlign: 'center',
+              height: '50px'
+            }"
+            :cell-style="{
+              textAlign: 'center',
+              padding: '8px 0'
+            }"
+          >
+            <el-table-column prop="time" label="时间" width="150" fixed>
               <template #default="{ row }">
-                <span>{{ row.time }}</span>
+                <div class="time-cell">
+                  <i class="el-icon-time"></i>
+                  <span>{{ row.time }}</span>
+                </div>
               </template>
             </el-table-column>
 
@@ -47,14 +71,21 @@
               :label="department"
               :prop="department"
             >
+              <template #header>
+                <div class="dept-header">
+                  {{ department }}
+                </div>
+              </template>
               <template #default="{ row, $index }">
                 <div
                   v-if="row[department]"
-                  class="block"
-                  :style="{ backgroundColor: '#409eff', cursor: 'pointer' }"
+                  class="action-block"
+                  :class="getDeptClass(department)"
                   @click="toggleDetail($index, department)"
                 >
-                  {{ isShowingDetail($index, department) ? row[department].detail : row[department].name }}
+                  <div class="block-content">
+                    {{ isShowingDetail($index, department) ? row[department].detail : row[department].name }}
+                  </div>
                 </div>
               </template>
             </el-table-column>
@@ -69,31 +100,55 @@
               <span class="event-time">{{ currentTime }}</span>
             </div>
             <div class="event-tags">
-              <span class="event-tag">沙尘暴</span>
-              <span class="event-tag">风力8级</span>
-              <span class="event-tag">中度火势</span>
-              <span class="event-tag">约10人被困</span>
+              <span class="event-tag"><i class="el-icon-warning"></i> 沙尘暴</span>
+              <span class="event-tag"><i class="el-icon-wind-power"></i> 风力8级</span>
+              <span class="event-tag"><i class="el-icon-hot-water"></i> 中度火势</span>
+              <span class="event-tag"><i class="el-icon-user"></i> 约10人被困</span>
             </div>
           </div>
           <div class="event-description">
-            <p><strong>火灾发生地点：</strong>阳光花园小区，3号楼，5楼</p>
-            <p><strong>火势等级：</strong>中度（黑烟明显，有明火）</p>
-            <p><strong>报警来源：</strong>烟感报警器 + 居民电话报警</p>
-            <p><strong>时间：</strong>2025年4月15日 08:32</p>
-            <p><strong>天气：</strong>沙尘暴，风力8级</p>
-            <p><strong>人员情况：</strong>楼内可能有10人被困</p>
+            <div class="info-item">
+              <div class="info-label"><i class="el-icon-location"></i> 火灾发生地点</div>
+              <div class="info-value">阳光花园小区，3号楼，5楼</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label"><i class="el-icon-warning-outline"></i> 火势等级</div>
+              <div class="info-value">中度（黑烟明显，有明火）</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label"><i class="el-icon-bell"></i> 报警来源</div>
+              <div class="info-value">烟感报警器 + 居民电话报警</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label"><i class="el-icon-date"></i> 时间</div>
+              <div class="info-value">2025年4月15日 08:32</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label"><i class="el-icon-partly-cloudy"></i> 天气</div>
+              <div class="info-value">沙尘暴，风力8级</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label"><i class="el-icon-user"></i> 人员情况</div>
+              <div class="info-value">楼内可能有10人被困</div>
+            </div>
           </div>
         </div>
   
         <!-- 阶段标签导航 -->
-        <div class="phase-tabs">
-          <div
-            v-for="(phaseName, phaseKey) in phaseNames"
-            :key="phaseKey"
-            :class="['phase-tab', { active: activePhase === phaseKey }]"
-            @click="activePhase = phaseKey"
-          >
-            {{ phaseName }}
+        <div class="phase-tabs-container">
+          <div class="phase-tabs">
+            <div
+              v-for="(phaseName, phaseKey) in phaseNames"
+              :key="phaseKey"
+              :class="['phase-tab', { active: activePhase === phaseKey }]"
+              @click="activePhase = phaseKey"
+            >
+              <div class="tab-content">
+                <div class="phase-number">{{ phaseKey.replace('阶段', '') }}</div>
+                <div class="phase-name">{{ phaseName }}</div>
+              </div>
+              <div class="active-indicator" v-if="activePhase === phaseKey"></div>
+            </div>
           </div>
         </div>
   
@@ -103,11 +158,14 @@
           <p>{{ phaseDescriptions[activePhase].description }}</p>
         </div>
   
-        <!-- 添加部门职责表格组件 -->
+        <!-- 部门职责表格组件 -->
         <div class="department-tasks-table">
           <div class="task-table-header">
             <h3>各部门阶段职责表</h3>
-            <div class="current-phase-indicator">当前阶段：{{ phaseNames[activePhase] }}</div>
+            <div class="current-phase-indicator">
+              <span class="phase-dot"></span>
+              当前阶段：{{ phaseNames[activePhase] }}
+            </div>
           </div>
           <div class="task-table-body">
             <div class="task-departments">
@@ -119,6 +177,7 @@
               >
                 <div class="dept-indicator" :class="getDeptColorClass(dept)"></div>
                 <span>{{ dept }}</span>
+                <i class="el-icon-arrow-right" v-if="activeDepartment === dept"></i>
               </div>
             </div>
             <div class="task-content-display">
@@ -143,6 +202,7 @@
                 </div>
               </div>
               <div v-else class="select-department-prompt">
+                <i class="el-icon-d-arrow-left"></i>
                 请点击左侧部门查看职责
               </div>
             </div>
@@ -154,43 +214,59 @@
         <!-- 优先级和资源显示区域 -->
         <div class="priority-resource-grid">
           <div class="priority-card">
-            <h3>任务优先级</h3>
+            <div class="card-header">
+              <h3><i class="el-icon-star-on"></i> 任务优先级</h3>
+            </div>
             <ul class="priority-list">
-              <li><span class="priority-high">紧急</span> 疏散被困人员</li>
-              <li><span class="priority-high">紧急</span> 控制火源蔓延</li>
-              <li><span class="priority-medium">中等</span> 保护周边财产</li>
-              <li><span class="priority-low">常规</span> 记录损失情况</li>
+              <li class="priority-item">
+                <span class="priority-high">紧急</span> 
+                <span class="priority-text">疏散被困人员</span>
+              </li>
+              <li class="priority-item">
+                <span class="priority-high">紧急</span> 
+                <span class="priority-text">控制火源蔓延</span>
+              </li>
+              <li class="priority-item">
+                <span class="priority-medium">中等</span> 
+                <span class="priority-text">保护周边财产</span>
+              </li>
+              <li class="priority-item">
+                <span class="priority-low">常规</span> 
+                <span class="priority-text">记录损失情况</span>
+              </li>
             </ul>
           </div>
           <div class="resource-card">
-            <h3>资源配置</h3>
+            <div class="card-header">
+              <h3><i class="el-icon-help"></i> 资源配置</h3>
+            </div>
             <div class="resource-list">
               <div class="resource-item">
                 <div class="resource-icon">🚒</div>
                 <div class="resource-info">
                   <strong>消防车</strong>
-                  <span>2辆 已调派</span>
+                  <span class="resource-status"><i class="el-icon-finished"></i> 2辆 已调派</span>
                 </div>
               </div>
               <div class="resource-item">
                 <div class="resource-icon">🚑</div>
                 <div class="resource-info">
                   <strong>救护车</strong>
-                  <span>1辆 待命</span>
+                  <span class="resource-status"><i class="el-icon-time"></i> 1辆 待命</span>
                 </div>
               </div>
               <div class="resource-item">
                 <div class="resource-icon">👮</div>
                 <div class="resource-info">
                   <strong>安保人员</strong>
-                  <span>4名 现场</span>
+                  <span class="resource-status"><i class="el-icon-present"></i> 4名 现场</span>
                 </div>
               </div>
               <div class="resource-item">
                 <div class="resource-icon">👥</div>
                 <div class="resource-info">
                   <strong>志愿者</strong>
-                  <span>6名 待命</span>
+                  <span class="resource-status"><i class="el-icon-time"></i> 6名 待命</span>
                 </div>
               </div>
             </div>
@@ -199,13 +275,27 @@
   
         <!-- 部门协同示意图 -->
         <div class="collaboration-diagram-section">
-          <h3>部门协同示意图</h3>
+          <div class="section-header">
+            <h3><i class="el-icon-share"></i> 部门协同示意图</h3>
+          </div>
           <div class="diagram-container">
             <div class="department-nodes">
-              <div class="dept-node firefighter" @click="showDeptResponsibilities('消防员')">消防员</div>
-              <div class="dept-node doctor" @click="showDeptResponsibilities('医生')">医生</div>
-              <div class="dept-node security" @click="showDeptResponsibilities('保安')">保安</div>
-              <div class="dept-node property" @click="showDeptResponsibilities('物业')">物业</div>
+              <div class="dept-node firefighter" @click="showDeptResponsibilities('消防员')">
+                <i class="el-icon-user"></i>
+                <span>消防员</span>
+              </div>
+              <div class="dept-node doctor" @click="showDeptResponsibilities('医生')">
+                <i class="el-icon-first-aid-kit"></i>
+                <span>医生</span>
+              </div>
+              <div class="dept-node security" @click="showDeptResponsibilities('保安')">
+                <i class="el-icon-lock"></i>
+                <span>保安</span>
+              </div>
+              <div class="dept-node property" @click="showDeptResponsibilities('物业')">
+                <i class="el-icon-house"></i>
+                <span>物业</span>
+              </div>
             </div>
             <svg class="connection-lines" width="100%" height="100%">
               <!-- 水平连线 -->
@@ -410,6 +500,17 @@
     // 新增：加载时间线数据
     fetchTimelineData();
   });
+  
+  // 获取部门对应的CSS类名
+  function getDeptClass(dept) {
+    switch(dept) {
+      case '消防': return 'firefighter-dept';
+      case '医院': return 'doctor-dept';
+      case '安保': return 'security-dept';
+      case '物业': return 'property-dept';
+      default: return 'default-dept';
+    }
+  }
   </script>
   
   <style scoped>
@@ -515,243 +616,589 @@
   
   /* 事件信息卡片 */
   .event-info-card {
-    padding: 20px;
-    margin-bottom: 20px;
-    border-radius: 8px;
+    padding: 25px;
+    margin-bottom: 30px;
+    border-radius: 12px;
     background: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
   }
   
   .event-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-  }
-  
-  .event-title {
-    display: flex;
-    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eaedf2;
   }
   
   .event-title h2 {
-    margin: 0;
-    font-size: 22px;
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    font-weight: 600;
     color: #1976d2;
+    letter-spacing: -0.5px;
   }
   
   .event-time {
     font-size: 14px;
-    color: #666;
+    color: #606266;
+    font-weight: 500;
   }
   
   .event-tags {
     display: flex;
-    gap: 8px;
+    flex-wrap: wrap;
+    gap: 10px;
   }
   
   .event-tag {
-    padding: 4px 10px;
-    border-radius: 16px;
-    background: #e3f2fd;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: #f0f7ff;
     color: #1976d2;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 2px 5px rgba(25, 118, 210, 0.1);
+    transition: all 0.2s ease;
+  }
+  
+  .event-tag:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(25, 118, 210, 0.15);
   }
   
   .event-description {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 15px;
+    gap: 20px;
   }
   
-  .event-description p {
-    margin: 0;
-    padding: 10px;
-    border-radius: 6px;
-    background: #f5f7fa;
+  .info-item {
+    background: #f8fafd;
+    padding: 15px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+  }
+  
+  .info-item:hover {
+    background: #f0f7ff;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  .info-label {
+    font-weight: 600;
+    color: #606266;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+  }
+  
+  .info-value {
+    color: #303133;
+    font-size: 15px;
   }
   
   /* 阶段标签样式 */
+  .phase-tabs-container {
+    margin-bottom: 30px;
+  }
+  
   .phase-tabs {
     display: flex;
-    margin-bottom: 20px;
-    border-radius: 4px;
+    border-radius: 12px;
     overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    background: white;
   }
   
   .phase-tab {
     flex: 1;
-    padding: 15px;
+    padding: 20px 15px;
+    position: relative;
     text-align: center;
-    background-color: #e0e0e0;
-    color: #555;
+    background-color: white;
+    color: #606266;
     cursor: pointer;
     transition: all 0.3s ease;
-    border-right: 1px solid rgba(0, 0, 0, 0.1);
-  }
-  
-  .phase-tab:first-child {
-    border-radius: 4px 0 0 4px;
+    border-right: 1px solid #eaedf2;
   }
   
   .phase-tab:last-child {
-    border-radius: 0 4px 4px 0;
     border-right: none;
   }
   
+  .tab-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .phase-number {
+    font-size: 20px;
+    font-weight: 700;
+    color: #909399;
+    transition: all 0.3s ease;
+  }
+  
+  .phase-name {
+    font-size: 14px;
+    transition: all 0.3s ease;
+  }
+  
   .phase-tab.active {
-    background-color: #1976d2;
-    color: white;
+    background-color: #f0f7ff;
+  }
+  
+  .phase-tab.active .phase-number {
+    color: #1976d2;
+  }
+  
+  .phase-tab.active .phase-name {
+    color: #1976d2;
+    font-weight: 600;
+  }
+  
+  .active-indicator {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: #1976d2;
   }
   
   /* 阶段描述样式 */
   .phase-description {
-    margin-bottom: 20px;
-    padding: 15px;
-    border-radius: 8px;
-    background-color: #f0f8ff;
+    margin-bottom: 30px;
+    padding: 20px;
+    border-radius: 12px;
+    background-color: #f0f7ff;
     border-left: 4px solid #1976d2;
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.1);
   }
   
   .phase-description h3 {
     margin-top: 0;
     margin-bottom: 10px;
     color: #1976d2;
+    font-size: 18px;
+    font-weight: 600;
   }
   
   .phase-description p {
     margin: 0;
-    color: #555;
-    line-height: 1.5;
+    color: #606266;
+    line-height: 1.6;
   }
   
-  /* 部门任务矩阵样式 */
-  .department-matrix {
-    display: flex;
+  /* 部门任务表格样式 */
+  .department-tasks-table {
     margin-bottom: 30px;
-    border-radius: 8px;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
   
-  .department-sidebar {
-    width: 150px;
-    background-color: #f5f5f5;
-    border-right: 1px solid #e0e0e0;
+  .task-table-header {
+    padding: 20px 25px;
+    background-color: #f8fafd;
+    border-bottom: 1px solid #eaedf2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
   
-  .department-header {
-    padding: 15px;
+  .task-table-header h3 {
+    margin: 0;
+    color: #1976d2;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  
+  .current-phase-indicator {
+    padding: 8px 15px;
+    background-color: #f0f7ff;
+    color: #1976d2;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .phase-dot {
+    width: 8px;
+    height: 8px;
+    background: #1976d2;
+    border-radius: 50%;
+    display: block;
+  }
+  
+  .task-table-body {
+    display: flex;
+    min-height: 400px;
+  }
+  
+  .task-departments {
+    width: 180px;
+    background-color: #f8fafd;
+    border-right: 1px solid #eaedf2;
+  }
+  
+  .task-department-item {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eaedf2;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  
+  .task-department-item.active {
+    background-color: #f0f7ff;
+    font-weight: 600;
+  }
+  
+  .task-department-item.active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
     background-color: #1976d2;
-    color: white;
-    font-weight: bold;
-    text-align: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   }
   
-  .department-item {
-    padding: 20px 15px;
-    border-bottom: 1px solid #e0e0e0;
-    background-color: #f9f9f9;
-    font-weight: bold;
-    color: #333;
+  .task-department-item:hover {
+    background-color: #f0f7ff;
   }
   
-  .tasks-container {
+  .dept-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 12px;
+  }
+  
+  .task-department-item i {
+    margin-left: auto;
+    color: #1976d2;
+    font-size: 14px;
+  }
+  
+  .task-content-display {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .department-tasks {
-    display: flex;
-    flex-direction: column;
-    border-bottom: 1px solid #e0e0e0;
-  }
-  
-  .department-tasks:last-child {
-    border-bottom: none;
-  }
-  
-  .task-content {
-    flex: 1;
+    padding: 25px;
     background-color: white;
   }
   
-  .task-item {
-    padding: 20px;
-    border-bottom: 1px solid #f0f0f0;
-    color: #333;
-    line-height: 1.5;
+  .task-content-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
   
-  .task-item:last-child {
-    border-bottom: none;
+  .task-content-header {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eaedf2;
+  }
+  
+  .task-content-header h4 {
+    margin: 0;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    color: #303133;
+  }
+  
+  .task-content-header span {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 10px;
+  }
+  
+  .task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .task-item-row {
+    display: flex;
+    background-color: #f8fafd;
+    padding: 15px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+  }
+  
+  .task-item-row:hover {
+    background-color: #f0f7ff;
+    transform: translateX(5px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  .task-number {
+    width: 28px;
+    height: 28px;
+    background-color: #1976d2;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    margin-right: 15px;
+    flex-shrink: 0;
+  }
+  
+  .task-description {
+    flex: 1;
+    line-height: 1.6;
+    color: #303133;
+  }
+  
+  .select-department-prompt, .no-tasks-message {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #909399;
+    font-size: 16px;
+    background-color: #f8fafd;
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    gap: 10px;
+  }
+  
+  /* 新增时间线表格样式 */
+  .timeline-matrix {
+    margin-bottom: 30px;
+    padding: 25px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+  }
+  
+  .timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eaedf2;
+  }
+  
+  .timeline-header h3 {
+    margin: 0;
+    color: #1976d2;
+    font-size: 20px;
+    font-weight: 600;
+    position: relative;
+  }
+  
+  .timeline-header h3:after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background: #1976d2;
+    border-radius: 3px;
+  }
+  
+  .refresh-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-weight: 500;
+  }
+  
+  .refresh-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
+  }
+  
+  .timeline-table {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #eaedf2;
+  }
+  
+  .time-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    color: #606266;
+    font-weight: 600;
+  }
+  
+  .dept-header {
+    font-weight: 600;
+    padding: 4px 0;
+  }
+  
+  .action-block {
+    position: relative;
+    padding: 10px 12px;
+    border-radius: 6px;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    margin: 6px;
+    overflow: hidden;
+  }
+  
+  .block-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    line-height: 1.4;
+  }
+  
+  .action-block:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .action-block:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .action-block:hover:after {
+    opacity: 1;
+  }
+  
+  /* 部门颜色类 */
+  .firefighter-dept {
+    background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+  }
+  
+  .doctor-dept {
+    background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+  }
+  
+  .security-dept {
+    background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+  }
+  
+  .property-dept {
+    background: linear-gradient(135deg, #fb8c00 0%, #ef6c00 100%);
+  }
+  
+  .default-dept {
+    background: linear-gradient(135deg, #409eff 0%, #337ecc 100%);
   }
   
   /* 优先级和资源区域 */
   .priority-resource-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 25px;
     margin-bottom: 30px;
   }
   
   .priority-card, .resource-card {
-    padding: 20px;
-    border-radius: 8px;
+    padding: 0;
+    border-radius: 12px;
     background: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: all 0.3s ease;
   }
   
-  .priority-card h3, .resource-card h3 {
-    margin-top: 0;
-    margin-bottom: 15px;
+  .priority-card:hover, .resource-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+  
+  .card-header {
+    padding: 20px 25px;
+    background-color: #f8fafd;
+    border-bottom: 1px solid #eaedf2;
+  }
+  
+  .card-header h3 {
+    margin: 0;
     color: #1976d2;
     font-size: 18px;
-    position: relative;
-  }
-  
-  .priority-card h3::after, .resource-card h3::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: -5px;
-    width: 50px;
-    height: 3px;
-    background-color: #1976d2;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   
   .priority-list {
     list-style: none;
-    padding: 0;
+    padding: 20px 25px;
     margin: 0;
   }
   
-  .priority-list li {
+  .priority-item {
     display: flex;
     align-items: center;
-    margin-bottom: 12px;
-    padding: 10px 15px;
-    border-radius: 6px;
-    background: #f8f9fa;
-    transition: all 0.2s ease;
+    margin-bottom: 15px;
+    padding: 12px 15px;
+    border-radius: 10px;
+    background: #f8fafd;
+    transition: all 0.3s ease;
   }
   
-  .priority-list li:hover {
-    transform: translateX(5px);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  .priority-item:last-child {
+    margin-bottom: 0;
+  }
+  
+  .priority-item:hover {
+    transform: translateX(8px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    background: #f0f7ff;
   }
   
   .priority-high, .priority-medium, .priority-low {
     display: inline-block;
-    min-width: 45px;
-    margin-right: 12px;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 12px;
+    min-width: 48px;
+    margin-right: 15px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 13px;
     text-align: center;
-    font-weight: bold;
+    font-weight: 600;
   }
   
   .priority-high {
@@ -769,75 +1216,97 @@
     color: #2e7d32;
   }
   
+  .priority-text {
+    font-size: 15px;
+    color: #303133;
+  }
+  
   .resource-list {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 15px;
+    padding: 20px 25px;
   }
   
   .resource-item {
     display: flex;
     align-items: center;
     padding: 15px;
-    border-radius: 8px;
-    background: #f8f9fa;
-    transition: all 0.2s ease;
-    gap: 12px;
+    border-radius: 10px;
+    background: #f8fafd;
+    transition: all 0.3s ease;
+    gap: 15px;
   }
   
   .resource-item:hover {
     transform: translateY(-3px);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    background: #f0f7ff;
   }
   
   .resource-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
-    background: #1976d2;
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
     color: white;
-    font-size: 20px;
+    font-size: 22px;
+    box-shadow: 0 4px 8px rgba(25, 118, 210, 0.2);
   }
   
   .resource-info {
     display: flex;
     flex-direction: column;
+    gap: 5px;
   }
   
   .resource-info strong {
     font-size: 15px;
-    color: #333;
-    margin-bottom: 4px;
+    color: #303133;
+    font-weight: 600;
   }
   
-  .resource-info span {
+  .resource-status {
     font-size: 13px;
-    color: #666;
+    color: #606266;
+    display: flex;
+    align-items: center;
+    gap: 5px;
   }
   
   /* 部门协同示意图样式 */
   .collaboration-diagram-section {
-    padding: 25px;
-    border-radius: 8px;
+    padding: 0;
+    border-radius: 12px;
     background: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
     margin-bottom: 30px;
+    overflow: hidden;
   }
   
-  .collaboration-diagram-section h3 {
-    margin-top: 0;
-    margin-bottom: 20px;
+  .section-header {
+    padding: 20px 25px;
+    background-color: #f8fafd;
+    border-bottom: 1px solid #eaedf2;
+  }
+  
+  .section-header h3 {
+    margin: 0;
     color: #1976d2;
-    text-align: center;
     font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   
   .diagram-container {
     position: relative;
-    height: 300px;
+    height: 350px;
+    padding: 20px;
   }
   
   .department-nodes {
@@ -848,42 +1317,48 @@
   
   .dept-node {
     position: absolute;
-    width: 100px;
-    height: 100px;
+    width: 110px;
+    height: 110px;
     border-radius: 50%;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     color: white;
-    font-weight: bold;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    font-weight: 600;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
     z-index: 2;
     cursor: pointer;
     transition: all 0.3s ease;
+    gap: 8px;
+  }
+  
+  .dept-node i {
+    font-size: 24px;
   }
   
   .firefighter {
     top: 20px;
     left: 20%;
-    background: #e53935;
+    background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
   }
   
   .doctor {
     top: 20px;
     right: 20%;
-    background: #43a047;
+    background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
   }
   
   .security {
     bottom: 20px;
     left: 20%;
-    background: #1e88e5;
+    background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
   }
   
   .property {
     bottom: 20px;
     right: 20%;
-    background: #fb8c00;
+    background: linear-gradient(135deg, #fb8c00 0%, #ef6c00 100%);
   }
   
   .connection-lines {
@@ -895,13 +1370,18 @@
     z-index: 1;
   }
   
+  .dept-node:hover {
+    transform: scale(1.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  }
+  
   /* 部门职责显示区域样式 */
   .dept-responsibilities {
-    margin-top: 20px;
+    margin: 0 20px 20px;
     padding: 20px;
-    border-radius: 8px;
-    background-color: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    background-color: #f8fafd;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     animation: slideIn 0.3s ease;
   }
   
@@ -921,8 +1401,8 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eaedf2;
   }
   
   .dept-responsibilities-header h4 {
@@ -930,6 +1410,7 @@
     font-size: 18px;
     display: flex;
     align-items: center;
+    color: #303133;
   }
   
   .dept-responsibilities-header span {
@@ -937,36 +1418,22 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    margin-right: 8px;
-  }
-  
-  .firefighter-color {
-    background-color: #e53935;
-  }
-  
-  .doctor-color {
-    background-color: #43a047;
-  }
-  
-  .security-color {
-    background-color: #1e88e5;
-  }
-  
-  .property-color {
-    background-color: #fb8c00;
+    margin-right: 10px;
   }
   
   .close-btn {
     background: none;
     border: none;
-    font-size: 20px;
-    color: #999;
+    font-size: 22px;
+    color: #909399;
     cursor: pointer;
     padding: 0 5px;
+    transition: all 0.2s ease;
   }
   
   .close-btn:hover {
-    color: #333;
+    color: #303133;
+    transform: rotate(90deg);
   }
   
   .responsibilities-content {
@@ -976,37 +1443,39 @@
   }
   
   .phase-responsibilities {
-    background-color: #f9f9f9;
+    background-color: white;
     padding: 15px;
-    border-radius: 6px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+  }
+  
+  .phase-responsibilities:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   }
   
   .phase-responsibilities h5 {
     margin-top: 0;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     color: #1976d2;
     font-size: 16px;
+    font-weight: 600;
   }
   
   .phase-responsibilities ul {
     margin: 0;
-    padding-left: 20px;
+    padding-left: 25px;
   }
   
   .phase-responsibilities li {
-    margin-bottom: 8px;
-    line-height: 1.5;
-    color: #333;
+    margin-bottom: 10px;
+    line-height: 1.6;
+    color: #303133;
   }
   
   .phase-responsibilities li:last-child {
     margin-bottom: 0;
-  }
-  
-  /* 部门节点悬停效果 */
-  .dept-node:hover {
-    transform: scale(1.05);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   }
   
   /* 响应式设计 */
@@ -1029,23 +1498,9 @@
       grid-template-columns: 1fr;
     }
     
-    .department-matrix {
-      flex-direction: column;
-    }
-    
-    .department-sidebar {
-      width: 100%;
-      border-right: none;
-      border-bottom: 1px solid #e0e0e0;
-    }
-    
-    .department-item {
-      padding: 10px 15px;
-    }
-    
     .dept-node {
-      width: 80px;
-      height: 80px;
+      width: 90px;
+      height: 90px;
       font-size: 14px;
     }
     
@@ -1058,186 +1513,5 @@
     .nav-menu {
       margin: 10px 0;
     }
-  }
-  
-  /* 部门任务表格样式 */
-  .department-tasks-table {
-    margin-bottom: 30px;
-    border-radius: 8px;
-    background: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-  }
-  
-  .task-table-header {
-    padding: 15px 20px;
-    background-color: #f5f7fa;
-    border-bottom: 1px solid #e0e0e0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .task-table-header h3 {
-    margin: 0;
-    color: #1976d2;
-    font-size: 18px;
-  }
-  
-  .current-phase-indicator {
-    padding: 5px 12px;
-    background-color: #e3f2fd;
-    color: #1976d2;
-    border-radius: 16px;
-    font-size: 14px;
-    font-weight: 600;
-  }
-  
-  .task-table-body {
-    display: flex;
-    min-height: 350px;
-  }
-  
-  .task-departments {
-    width: 160px;
-    background-color: #f5f5f5;
-    border-right: 1px solid #e0e0e0;
-  }
-  
-  .task-department-item {
-    padding: 15px;
-    border-bottom: 1px solid #e0e0e0;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-  }
-  
-  .task-department-item.active {
-    background-color: #e3f2fd;
-    font-weight: 600;
-  }
-  
-  .task-department-item.active::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background-color: #1976d2;
-  }
-  
-  .task-department-item:hover {
-    background-color: #f0f7ff;
-  }
-  
-  .dept-indicator {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-right: 10px;
-  }
-  
-  .task-content-display {
-    flex: 1;
-    padding: 20px;
-    background-color: white;
-  }
-  
-  .task-content-card {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .task-content-header {
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .task-content-header h4 {
-    margin: 0;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    color: #333;
-  }
-  
-  .task-content-header span {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    margin-right: 8px;
-  }
-  
-  .task-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .task-item-row {
-    display: flex;
-    background-color: #f9f9f9;
-    padding: 15px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-  }
-  
-  .task-item-row:hover {
-    background-color: #f0f7ff;
-    transform: translateX(5px);
-  }
-  
-  .task-number {
-    width: 24px;
-    height: 24px;
-    background-color: #1976d2;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    margin-right: 12px;
-    flex-shrink: 0;
-  }
-  
-  .task-description {
-    flex: 1;
-    line-height: 1.5;
-  }
-  
-  .select-department-prompt, .no-tasks-message {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #999;
-    font-size: 15px;
-    background-color: #f9f9f9;
-    border-radius: 6px;
-    padding: 20px;
-    text-align: center;
-  }
-  
-  /* 新增时间线表格样式 */
-  .timeline-matrix {
-    margin-bottom: 30px;
-    padding: 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .block {
-    color: #fff;
-    padding: 5px;
-    text-align: center;
-    border-radius: 4px;
   }
   </style>
