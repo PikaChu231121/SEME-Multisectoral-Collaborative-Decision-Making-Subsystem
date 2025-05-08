@@ -13,7 +13,6 @@ import comment from './comment';
 import split from './split';
 import matp from './matp';
 import collaboration from './collaboration';
-import timeline from './timeline';
 export default [
   ...global,
   ...video,
@@ -22,7 +21,6 @@ export default [
   ...task,
   ...decision,
   collaboration,
-  timeline,
   ...detection,
   ...colmap,
   ...traffic,

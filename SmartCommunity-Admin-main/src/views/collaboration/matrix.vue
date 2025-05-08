@@ -28,6 +28,39 @@
       </div>
   
       <div class="main-content">
+        <!-- 时间线表格 -->
+        <div class="timeline-matrix">
+          <el-button type="primary" :loading="loading" @click="handleButtonClick" style="margin-bottom: 15px;">
+            {{ loading ? '刷新中' : '刷新数据' }}
+          </el-button>
+
+          <el-table :data="timelineData" border style="width: 100%; margin-bottom: 20px;">
+            <el-table-column prop="time" label="时间" width="150">
+              <template #default="{ row }">
+                <span>{{ row.time }}</span>
+              </template>
+            </el-table-column>
+
+            <el-table-column
+              v-for="department in timelineDepartments"
+              :key="department"
+              :label="department"
+              :prop="department"
+            >
+              <template #default="{ row, $index }">
+                <div
+                  v-if="row[department]"
+                  class="block"
+                  :style="{ backgroundColor: '#409eff', cursor: 'pointer' }"
+                  @click="toggleDetail($index, department)"
+                >
+                  {{ isShowingDetail($index, department) ? row[department].detail : row[department].name }}
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+
         <!-- 事件信息卡片 -->
         <div class="event-info-card">
           <div class="event-header">
@@ -215,6 +248,7 @@
   
   <script setup>
   import { ref, onMounted, reactive } from 'vue';
+  import axios from 'axios';
   
   // 基础数据
   const currentTime = ref(new Date().toLocaleString('zh-CN'));
@@ -322,11 +356,59 @@
     }
   });
   
+  // 新增时间线相关的数据
+  const timelineData = ref([]);
+  const timelineDepartments = ref([]);
+  const showDetails = reactive({});
+  const loading = ref(false);
+  
+  // 新增时间线相关的方法
+  const handleButtonClick = async () => {
+    loading.value = true;
+    try {
+      await runPythonScript();
+      await fetchTimelineData();
+      console.log("数据已刷新");
+    } catch (error) {
+      console.error("刷新数据时发生错误", error);
+    } finally {
+      loading.value = false;
+    }
+  };
+  
+  const fetchTimelineData = () => {
+    return axios.get("/api/get-timeline-detail")
+      .then(response => {
+        timelineData.value = [...response.data.timeline];
+        timelineDepartments.value = [...response.data.departments];
+      })
+      .catch(error => {
+        console.error("获取时间表数据失败：", error);
+      });
+  };
+  
+  const runPythonScript = () => {
+    return axios.post("/api/refresh-response");
+  };
+  
+  const toggleDetail = (rowIndex, department) => {
+    const key = `${rowIndex}-${department}`;
+    showDetails[key] = !showDetails[key];
+  };
+  
+  const isShowingDetail = (rowIndex, department) => {
+    const key = `${rowIndex}-${department}`;
+    return showDetails[key];
+  };
+  
   // 更新时间
   onMounted(() => {
     setInterval(() => {
       currentTime.value = new Date().toLocaleString('zh-CN');
     }, 1000);
+    
+    // 新增：加载时间线数据
+    fetchTimelineData();
   });
   </script>
   
@@ -1141,5 +1223,21 @@
     border-radius: 6px;
     padding: 20px;
     text-align: center;
+  }
+  
+  /* 新增时间线表格样式 */
+  .timeline-matrix {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .block {
+    color: #fff;
+    padding: 5px;
+    text-align: center;
+    border-radius: 4px;
   }
   </style>

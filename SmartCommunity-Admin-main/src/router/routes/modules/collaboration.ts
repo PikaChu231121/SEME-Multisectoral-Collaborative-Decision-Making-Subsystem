@@ -17,7 +17,7 @@ const collaborationRoutes: RouteRecordRaw = {
     {
       path: 'matrix',
       name: 'collaboration-matrix',
-      component: () => import('@/views/collaboration/index.vue'),
+      component: () => import('@/views/collaboration/matrix.vue'),
       meta: {
         title: '协同决策矩阵',
         icon: 'mingcute:mind-map-fill',
@@ -26,10 +26,19 @@ const collaborationRoutes: RouteRecordRaw = {
     {
       path: 'decision',
       name: 'collaboration-decision',
-      component: () => import('@/views/decision/index.vue'),
+      component: () => import('@/views/collaboration/decision.vue'),
       meta: {
         title: '智能决策系统',
         icon: 'carbon:decision-tree',
+      },
+    },
+    {
+      path: 'matrix',
+      name: 'timeline-matrix',
+      component: () => import('@/views/timeline/matrix.vue'),
+      meta: {
+          title: '时间表矩阵',
+          icon: 'mdi:table',
       },
     },
   ],
