@@ -6,11 +6,14 @@ package com.example.SmartCommunity.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.Map;
 
 @Setter
 @Getter
 public class FireResponseDTO {
-    private Map<String, Map<String, String[]>> stages;
+    // Getters and Setters
+    private List<String> departments;
+    private List<Map<String, Object>> timeline;
 
 }

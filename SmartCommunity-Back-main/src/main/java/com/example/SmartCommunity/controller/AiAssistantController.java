@@ -1,10 +1,9 @@
 package com.example.SmartCommunity.controller;
 
-import com.example.SmartCommunity.dto.FireResponseDTO;
-import com.example.SmartCommunity.dto.UserMessageDTO;
-import com.example.SmartCommunity.dto.UserMessageRequestDTO;
+import com.example.SmartCommunity.dto.*;
 import com.example.SmartCommunity.model.ChatTopic;
 import com.example.SmartCommunity.service.AiAssistantService;
+import com.example.SmartCommunity.service.TimelineService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jetbrains.annotations.NotNull;
@@ -16,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Tag(name="AI助手接口",description = """
         ChatTopic 指的是对话的主题，对应的是 ChatGPT 左侧的那一列(点击之后可以切换到不同对话的那个)
@@ -26,6 +26,7 @@ import java.util.List;
 public class AiAssistantController {
 
     private final AiAssistantService aiAssistantService;
+    private TimelineService timelineService;
 
     @Autowired
     public AiAssistantController(AiAssistantService aiAssistantService) {
@@ -128,25 +129,37 @@ public class AiAssistantController {
     }
     @Operation(summary = "接收 CAMEL 智能体系统的火灾响应数据")
     @PostMapping("/receive-fire-response")
-    public ResponseEntity<String> receiveFireResponse(@RequestBody FireResponseDTO fireResponseDTO) {
+    public ResponseEntity<String> receiveFireResponse(@RequestBody TimelineDTO timelineDTO) {
         try {
-            System.out.println("🔥 收到火灾响应数据：");
+            System.out.println("AIAssistantController收到火灾响应数据：");
 
-            // 更清晰地打印出每个阶段和角色的任务
-            fireResponseDTO.getStages().forEach((stage, roles) -> {
-                System.out.println("📌 " + stage + ":");
-                roles.forEach((role, tasks) -> {
-                    System.out.println("  👤 " + role + ":");
-                    for (String task : tasks) {
-                        System.out.println("    - " + task);
-                    }
-                });
-            });
+            // 打印部门列表
+            System.out.println("部门列表: " + timelineDTO.getDepartments());
 
-            return ResponseEntity.ok("✅ 火灾响应数据已成功接收！");
+            // 打印时间轴内容
+            System.out.println("时间轴内容:");
+            for (TimelineEntry entry : timelineDTO.getTimeline()) {
+                System.out.println("  时间段: " + entry.getTime());
+
+                Map<String, DepartmentTask> departmentTasks = entry.getActions();
+                if (departmentTasks != null) {
+                    departmentTasks.forEach((department, task) -> {
+                        System.out.println("    👤 " + department + ": " + task.getName() + " (详情: " + task.getDetail() + ")");
+                    });
+                } else {
+                    System.out.println("null");
+                }
+            }
+
+
+            return ResponseEntity.ok("火灾响应数据已成功接收并转发！");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("❌ 数据接收失败：" + e.getMessage());
+                    .body("数据接收失败：" + e.getMessage());
         }
     }
+
+
+
+
 }
