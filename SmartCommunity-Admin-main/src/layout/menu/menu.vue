@@ -42,7 +42,16 @@
   const openKeys = ref<string[]>([]);
   const selectedKeys = ref<string[]>([currentRoute.name as string]);
 
-  const menus = computed(() => userStore.menus);
+  // const menus = computed(() => userStore.menus);
+  const menus = computed(() =>
+    userStore.menus
+      .filter((item) => !item.meta?.hidden)
+      .map((item) => ({
+        ...item,
+        children: item.children?.filter((child) => !child.meta?.hidden),
+      }))
+  );
+
   console.log('menus', menus.value);
   /** 侧边栏布局 */
   const isSideMenu = computed(() => layoutSettingStore.layoutSetting.layout === 'sidemenu');

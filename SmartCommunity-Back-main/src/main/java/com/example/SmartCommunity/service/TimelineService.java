@@ -3,12 +3,30 @@ package com.example.SmartCommunity.service;
 import com.example.SmartCommunity.dto.DepartmentTask;
 import com.example.SmartCommunity.dto.TimelineDTO;
 import com.example.SmartCommunity.dto.TimelineEntry;
+
+import com.example.SmartCommunity.repository.EventActionRepository;
+import com.example.SmartCommunity.repository.EventRepository;
+import com.example.SmartCommunity.repository.EventStageRepository;
+
+import com.example.SmartCommunity.model.Event;
+import com.example.SmartCommunity.model.EventStage;
+import com.example.SmartCommunity.model.EventAction;
+
+import com.google.gson.Gson;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
 public class TimelineService {
+
+    @Autowired
+    private EventRepository eventRepository;
+    @Autowired
+    private EventStageRepository eventStageRepository;
+    @Autowired
+    private EventActionRepository eventActionRepository;
 
     private List<String> departments = new ArrayList<>();
     private List<TimelineEntry> timelineData = new ArrayList<>();
@@ -17,34 +35,36 @@ public class TimelineService {
     public void saveTimelineData(TimelineDTO timelineDTO) {
         this.timelineData = timelineDTO.getTimeline();
         this.departments = timelineDTO.getDepartments();
+        // 1. 存储 event
+        Event event = new Event();
+        event.setDepartments(new Gson().toJson(timelineDTO.getDepartments())); // 将 List<String> 转为 JSON 字符串
+        event = eventRepository.save(event);
+
+        // 2. 遍历 timeline
+        for (TimelineEntry entry : timelineDTO.getTimeline()) {
+            // 2.1 创建并保存 event_stage
+            EventStage stage = new EventStage();
+            stage.setTimeRange(entry.getTime());
+            stage.setEvent(event);
+            stage = eventStageRepository.save(stage);
+
+            // 2.2 遍历每个部门的 actions
+            for (Map.Entry<String, DepartmentTask> departmentEntry : entry.getActions().entrySet()) {
+                String departmentName = departmentEntry.getKey();
+                DepartmentTask task = departmentEntry.getValue();
+
+                EventAction action = new EventAction();
+                action.setDepartmentName(departmentName);
+                action.setActionName(task.getName());
+                action.setActionDetail(task.getDetail());
+                action.setStage(stage);
+
+                eventActionRepository.save(action);
+            }
+        }
     }
 
-//    // 发送固定的格式数据
-//    public List<TimelineEntry> getTimelineData() {
-//        List<TimelineEntry> timeline = new ArrayList<>();
-//
-//        // 示例：08:50-09:00 时间段任务
-//        Map<String, DepartmentTask> actions1 = new HashMap<>();
-//        actions1.put("消防", new DepartmentTask("名字(后端成功)", "详细(后端成功)"));
-//        actions1.put("医院", null);
-//        actions1.put("安保", new DepartmentTask("名字(后端成功)", "详细(后端成功)"));
-//        actions1.put("物业", new DepartmentTask("名字(后端成功)", "详细(后端成功)"));
-//
-//        timeline.add(new TimelineEntry("08:50-09:00", actions1));
-//
-//        // 示例：09:00-09:10 时间段任务
-//        Map<String, DepartmentTask> actions2 = new HashMap<>();
-//        actions2.put("消防", new DepartmentTask("名字(后端成功)", "详细(后端成功)"));
-//        actions2.put("医院", new DepartmentTask("名字(后端成功)", "详细(后端成功)"));
-//        actions2.put("安保", new DepartmentTask("名字(后端成功)", "详细(后端成功)"));
-//        actions2.put("物业", new DepartmentTask("名字(后端成功)", "详细(后端成功)"));
-//
-//        timeline.add(new TimelineEntry("09:00-09:10", actions2));
-//
-//        return timeline;
-//    }
-
-    // 发送真实的数据
+    // 发送数据
     public List<TimelineEntry> getTimelineData() {
         List<TimelineEntry> timeline = new ArrayList<>();
 
@@ -80,12 +100,11 @@ public class TimelineService {
             timeline.add(new TimelineEntry(entry.getTime(), actions));
         }
 
-
-
         return timeline;
     }
 
     public List<String> getDepartments() {
         return Arrays.asList("消防", "医院", "安保", "物业");
     }
+
 }

@@ -14,6 +14,7 @@ import split from './split';
 import matp from './matp';
 import collaboration from './collaboration';
 import timeline from './timeline';
+import responseHistory from './responseHistory';
 export default [
   ...global,
   ...video,
@@ -23,6 +24,7 @@ export default [
   ...decision,
   collaboration,
   timeline,
+  responseHistory,
   ...detection,
   ...colmap,
   ...traffic,
