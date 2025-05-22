@@ -3,8 +3,14 @@ from camel.models import ModelFactory
 from camel.societies.workforce import Workforce
 from camel.tasks import Task
 from camel.types import ModelPlatformType
+import os
+from dotenv import load_dotenv
 import json
 import requests
+
+# 加载.env文件
+load_dotenv()
+api_key = os.getenv("API_KEY")
 
 # === 模型初始化 ===
 
@@ -12,7 +18,7 @@ model = ModelFactory.create(
     model_platform=ModelPlatformType.OPENAI_COMPATIBLE_MODEL,
     model_type="gpt-4.1",
     url="https://api.chatanywhere.tech/v1",
-    api_key="sk-5d9oiaPwtq9s6UnGDr6F9jiCxF3QoYneXpiXnZBpTZgk874N",
+    api_key=api_key,
     model_config_dict={
         "max_tokens": 32768
     }

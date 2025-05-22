@@ -41,9 +41,9 @@ public class TimelineController {
 
                 Map<String, DepartmentTask> departmentTasks = entry.getActions();
                 if (departmentTasks != null) {
-                    departmentTasks.forEach((department, task) -> {
-                        System.out.println("    👤 " + department + ": " + task.getName() + " (详情: " + task.getDetail() + ")");
-                    });
+                    departmentTasks.forEach((department, task) ->
+                            System.out.println("    👤 " + department + ": " + task.getName()
+                                    + " (详情: " + task.getDetail() + ")"));
                 } else {
                     System.out.println("null");
                 }
@@ -72,9 +72,7 @@ public class TimelineController {
             Map<String, Object> row = new HashMap<>();
             row.put("time", entry.getTime());
             // 展平 departments 键
-            for (Map.Entry<String, DepartmentTask> deptEntry : entry.getActions().entrySet()) {
-                row.put(deptEntry.getKey(), deptEntry.getValue());
-            }
+            row.putAll(entry.getActions());
             timeline.add(row);
         }
 
@@ -86,35 +84,28 @@ public class TimelineController {
 
     // 刷新AI的处理相应
     @PostMapping("/refresh-response")
-    public ResponseEntity<String> runScript() {
-        try {
-            String scriptPath = new File("scripts/transtest.py").getAbsolutePath();
-            ProcessBuilder processBuilder = new ProcessBuilder("python", scriptPath);
-            processBuilder.redirectErrorStream(true);
-            processBuilder.environment().put("PYTHONIOENCODING", "utf-8");
+    public ResponseEntity<String> runScriptAsync() {
+        executorService.submit(() -> {
+            try {
+                String pythonPath = "D:/ProgramData/Anaconda3/envs/camel/python.exe";
+                String scriptPath = new File("scripts/workforce.py").getAbsolutePath();
+                ProcessBuilder processBuilder = new ProcessBuilder(pythonPath, scriptPath);
+                processBuilder.redirectErrorStream(true);
+                processBuilder.environment().put("PYTHONIOENCODING", "utf-8");
 
-            Process process = processBuilder.start();
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println("[PYTHON OUT] " + line);
+                Process process = processBuilder.start();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.out.println("[PYTHON OUT] " + line);
+                }
+                int exitCode = process.waitFor();
+                System.out.println("Python script exited with code: " + exitCode);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+        });
 
-            int exitCode = process.waitFor();
-            if (exitCode == 0) {
-                System.out.println("Python script finished successfully.");
-                return ResponseEntity.ok("Script executed successfully.");
-            } else {
-                System.err.println("Script exited with error code: " + exitCode);
-                return ResponseEntity.status(500).body("Script failed with code: " + exitCode);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error executing script.");
-        }
+        return ResponseEntity.ok("Script started.");
     }
-
-
 }
