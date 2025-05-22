@@ -6,8 +6,14 @@
     </el-button>
 
     <!-- 历史记录表格 -->
-    <el-table :data="historyData" border style="width: 100%">
-      <el-table-column prop="id" label="事件 ID" width="100" />
+    <el-table :data="sortedHistoryData" border style="width: 100%">
+      <!-- 替代原 ID，用行号+1 显示顺序编号 -->
+      <el-table-column label="事件ID" width="100">
+        <template #default="scope">
+          <span>{{ sortedHistoryData.length - scope.$index }}</span>
+        </template>
+      </el-table-column>
+
 
       <el-table-column prop="createdAt" label="创建时间" width="200">
         <template #default="{ row }">
@@ -41,6 +47,12 @@ export default {
       historyData: [],
       loading: false
     };
+  },
+  computed: {
+    // 根据创建时间降序排列
+    sortedHistoryData() {
+      return [...this.historyData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
   },
   methods: {
     async fetchResponseHistory() {
