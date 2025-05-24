@@ -8,6 +8,10 @@
           <i class="el-icon-download"></i>
           导出数据
         </el-button>
+        <el-button type="success" @click="showReplay = true">
+          <i class="el-icon-video-play"></i>
+          流程回放
+        </el-button>
       </div>
     </div>
 
@@ -89,6 +93,27 @@
         </el-table-column>
       </el-table>
     </div>
+
+    <!-- 流程回放弹窗 -->
+    <el-dialog v-model="showReplay" title="事件流程回放" width="70%" :close-on-click-modal="false">
+      <div class="replay-timeline" ref="replayTimeline">
+        <div v-for="(row, idx) in timelineData" :key="idx" class="replay-row" :class="{ active: idx === replayStep }" :ref="idx === replayStep ? 'activeRow' : null">
+          <div class="replay-time">{{ row.time }}</div>
+          <div class="replay-actions">
+            <div v-for="dept in departments" :key="dept" class="replay-action-block" :class="[getDeptClass(dept), { 'replay-highlight': idx === replayStep }]">
+              <span v-if="row[dept]">{{ row[dept].name }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="replay-controls">
+        <el-button class="replay-btn" @click="replayPrev" :disabled="replayStep === 0 || timelineData.length === 0">上一步</el-button>
+        <el-button class="replay-btn" @click="toggleReplay" :disabled="timelineData.length === 0">{{ replayPlaying ? '暂停' : '播放' }}</el-button>
+        <el-button class="replay-btn" @click="replayNext" :disabled="replayStep === timelineData.length - 1 || timelineData.length === 0">下一步</el-button>
+        <el-button class="replay-btn" @click="replayRestart" :disabled="timelineData.length === 0">重播</el-button>
+        <el-progress :percentage="timelineData.length === 0 ? 0 : ((replayStep + 1) / timelineData.length) * 100" style="width: 200px; margin-left: 20px;"/>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -106,6 +131,11 @@ export default {
       timelineData: [],
       showDetails: {},
       eventId: null,
+      // 回放相关
+      showReplay: false,
+      replayStep: 0,
+      replayPlaying: false,
+      replayTimer: null,
     };
   },
   methods: {
@@ -192,6 +222,65 @@ export default {
       // 5. 导出
       const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
       saveAs(new Blob([wbout], { type: 'application/octet-stream' }), `应急处理时间线_${eventId}.xlsx`);
+    },
+    // 回放控制
+    toggleReplay() {
+      if (this.replayPlaying) {
+        this.replayPlaying = false;
+        clearInterval(this.replayTimer);
+      } else {
+        this.replayPlaying = true;
+        this.replayTimer = setInterval(() => {
+          if (this.replayStep < this.timelineData.length - 1) {
+            this.replayStep++;
+          } else {
+            this.replayPlaying = false;
+            clearInterval(this.replayTimer);
+          }
+        }, 1200);
+      }
+    },
+    replayPrev() {
+      if (this.replayStep > 0) this.replayStep--;
+    },
+    replayNext() {
+      if (this.replayStep < this.timelineData.length - 1) this.replayStep++;
+    },
+    replayRestart() {
+      this.replayStep = 0;
+      this.replayPlaying = false;
+      clearInterval(this.replayTimer);
+    },
+    scrollToActiveRow() {
+      // 自动滚动到当前高亮行
+      const timeline = this.$refs.replayTimeline;
+      const activeRow = this.$refs.activeRow;
+      if (timeline && activeRow && activeRow[0]) {
+        const rowEl = activeRow[0];
+        const top = rowEl.offsetTop - timeline.scrollTop;
+        timeline.scrollTo({ top: top - 40, behavior: 'smooth' });
+      }
+    },
+  },
+  watch: {
+    showReplay(val) {
+      if (val) {
+        this.replayStep = 0;
+        this.replayPlaying = false;
+        clearInterval(this.replayTimer);
+        this.$nextTick(() => {
+          this.scrollToActiveRow();
+        });
+      } else {
+        this.replayPlaying = false;
+        clearInterval(this.replayTimer);
+        this.replayStep = 0;
+      }
+    },
+    replayStep() {
+      this.$nextTick(() => {
+        this.scrollToActiveRow();
+      });
     }
   },
   mounted() {
@@ -381,5 +470,85 @@ export default {
 .dept-header.security-dept,
 .dept-header.property-dept {
   color: #fff !important;
+}
+
+.replay-timeline {
+  margin: 20px 0;
+  max-height: 350px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+.replay-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 10px 0;
+  border-radius: 12px;
+  transition: background 0.5s, box-shadow 0.5s, transform 0.4s;
+  background: #fff;
+}
+.replay-row.active {
+  background: linear-gradient(90deg, #e3f2fd 60%, #bbdefb 100%);
+  box-shadow: 0 4px 18px rgba(25, 118, 210, 0.18);
+  transform: scale(1.03);
+  z-index: 2;
+  animation: replayRowPop 0.5s;
+}
+@keyframes replayRowPop {
+  0% { transform: scale(0.98); box-shadow: 0 0 0 rgba(25,118,210,0); }
+  60% { transform: scale(1.05); box-shadow: 0 8px 24px rgba(25,118,210,0.18); }
+  100% { transform: scale(1.03); }
+}
+.replay-time {
+  width: 120px;
+  font-weight: bold;
+  color: #1976d2;
+  text-align: center;
+}
+.replay-actions {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+}
+.replay-action-block {
+  min-width: 120px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 15px;
+  color: #fff;
+  opacity: 0.7;
+  background: #bdbdbd;
+  transition: all 0.3s, box-shadow 0.3s;
+  position: relative;
+}
+.replay-row.active .replay-action-block {
+  opacity: 1;
+  font-weight: bold;
+  animation: actionPop 0.5s;
+  box-shadow: 0 0 16px 2px #90caf9;
+}
+@keyframes actionPop {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 #90caf9; }
+  60% { transform: scale(1.08); box-shadow: 0 0 24px 6px #90caf9; }
+  100% { transform: scale(1); box-shadow: 0 0 16px 2px #90caf9; }
+}
+.replay-highlight {
+  border: 2px solid #1976d2;
+  box-shadow: 0 0 12px 2px #1976d2;
+}
+.replay-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+.replay-btn {
+  transition: transform 0.1s;
+}
+.replay-btn:active {
+  transform: scale(0.93);
 }
 </style>
