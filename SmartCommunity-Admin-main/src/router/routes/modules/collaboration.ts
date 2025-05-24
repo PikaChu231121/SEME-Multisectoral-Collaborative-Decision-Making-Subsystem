@@ -41,6 +41,25 @@ const collaborationRoutes: RouteRecordRaw = {
           icon: 'mdi:table',
       },
     },
+    {
+      path: 'list',
+      name: 'response-history-list',
+      component: () => import('@/views/responseHistory/index.vue'),
+      meta: {
+          title: '历史记录列表',
+          icon: 'mdi:list-box',
+      },
+  },
+  {
+      path: 'detail/:id',
+      name: 'response-history-detail',
+      component: () => import('@/views/responseHistory/detail.vue'),
+      meta: {
+          title: '响应历史详情',
+          icon: 'mdi:file-document',
+          hidden: true, // ✅ 隐藏在侧边栏
+      },
+  },
   ],
 };
 
