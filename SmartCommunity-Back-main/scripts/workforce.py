@@ -26,7 +26,30 @@ model = ModelFactory.create(
 
 # === 火灾报警信息 ===
 
-fire_alarm_info = """
+import_path = os.path.join(os.path.dirname(__file__), 'fire_alarm_info.json')
+if os.path.exists(import_path):
+    try:
+        with open(import_path, 'r', encoding='utf-8') as f:
+            info = json.load(f)
+        fire_alarm_info = f"""
+火灾发生地点：{info.get('location', '未知')}
+火势等级：{info.get('level', '未知')}
+报警来源：{info.get('source', '未知')}
+时间：{info.get('time', '未知')}
+天气：{info.get('weather', '未知')}
+人员情况：{info.get('people', '未知')}
+"""
+    except Exception as e:
+        fire_alarm_info = """
+火灾发生地点：阳光花园小区，3号楼，5楼
+火势等级：中度（黑烟明显，有明火）
+报警来源：烟感报警器 + 居民电话报警
+时间：2025年4月15日 08:30
+天气：沙尘暴，风力8级
+人员情况：楼内可能有10人被困
+"""
+else:
+    fire_alarm_info = """
 火灾发生地点：阳光花园小区，3号楼，5楼
 火势等级：中度（黑烟明显，有明火）
 报警来源：烟感报警器 + 居民电话报警
@@ -119,7 +142,7 @@ task = workforce.process_task(Task(
 结合上述火灾信息（如地点、火势等级、被困人数等），
 制定一个完整的火灾应急响应方案
 
-假设火灾开始于8:30, 结束于10:30
+假设火灾开始于{info.get('time', '未知')},两个小时结束
 
 请确保每个角色的响应内容都与当前火情紧密相关，而不是通用模板。
 输出结构化时间线，分阶段列出各角色的任务，以及任务详情。并按时间段划分。例如：

@@ -1,6 +1,29 @@
 <template>
   <div class="timeline-matrix">
-    
+    <!-- 新增：火灾报警信息编辑表单 -->
+    <el-form :model="fireAlarmInfo" label-width="100px" style="margin-bottom: 20px;">
+      <el-form-item label="地点">
+        <el-input v-model="fireAlarmInfo.location" placeholder="如：阳光花园小区，3号楼，5楼"></el-input>
+      </el-form-item>
+      <el-form-item label="火势等级">
+        <el-input v-model="fireAlarmInfo.level" placeholder="如：中度（黑烟明显，有明火）"></el-input>
+      </el-form-item>
+      <el-form-item label="报警来源">
+        <el-input v-model="fireAlarmInfo.source" placeholder="如：烟感报警器 + 居民电话报警"></el-input>
+      </el-form-item>
+      <el-form-item label="时间">
+        <el-input v-model="fireAlarmInfo.time" placeholder="如：2025年4月15日 08:30"></el-input>
+      </el-form-item>
+      <el-form-item label="天气">
+        <el-input v-model="fireAlarmInfo.weather" placeholder="如：沙尘暴，风力8级"></el-input>
+      </el-form-item>
+      <el-form-item label="人员情况">
+        <el-input v-model="fireAlarmInfo.people" placeholder="如：楼内可能有10人被困"></el-input>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="submitFireAlarmInfo">保存报警信息</el-button>
+      </el-form-item>
+    </el-form>
     <!-- 刷新按钮 -->
     <el-button type="primary" :loading="loading" @click="handleButtonClick" style="margin-bottom: 15px;">
       {{ loading ? '刷新中' : '刷新数据' }}
@@ -48,7 +71,16 @@ export default {
       departments: [],
       timelineData: [],
       showDetails: {}, // 用于记录每个单元格是否显示 detail
-      loading: false // 用于控制加载状态
+      loading: false, // 用于控制加载状态
+      // 新增：火灾报警信息
+      fireAlarmInfo: {
+        location: '',
+        level: '',
+        source: '',
+        time: '',
+        weather: '',
+        people: ''
+      }
     };
   },
   methods: {
@@ -63,6 +95,16 @@ export default {
       }finally {
         this.loading = false;
       }
+    },
+    // 新增：提交火灾报警信息
+    submitFireAlarmInfo() {
+      axios.post('/api/set-fire-alarm-info', this.fireAlarmInfo)
+        .then(() => {
+          this.$message.success('报警信息已保存');
+        })
+        .catch(() => {
+          this.$message.error('保存失败');
+        });
     },
     // 封装数据请求方法
     fetchTimelineData() {

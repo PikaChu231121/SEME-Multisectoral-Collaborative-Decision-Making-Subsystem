@@ -94,45 +94,45 @@
 
         <!-- 事件信息卡片 -->
         <div class="event-info-card">
-          <div class="event-header">
-            <div class="event-title">
-              <h2>阳光花园小区火灾事件</h2>
-              <span class="event-time">{{ currentTime }}</span>
-            </div>
-            <div class="event-tags">
-              <span class="event-tag"><i class="el-icon-warning"></i> 沙尘暴</span>
-              <span class="event-tag"><i class="el-icon-wind-power"></i> 风力8级</span>
-              <span class="event-tag"><i class="el-icon-hot-water"></i> 中度火势</span>
-              <span class="event-tag"><i class="el-icon-user"></i> 约10人被困</span>
-            </div>
-          </div>
-          <div class="event-description">
-            <div class="info-item">
-              <div class="info-label"><i class="el-icon-location"></i> 火灾发生地点</div>
-              <div class="info-value">阳光花园小区，3号楼，5楼</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label"><i class="el-icon-warning-outline"></i> 火势等级</div>
-              <div class="info-value">中度（黑烟明显，有明火）</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label"><i class="el-icon-bell"></i> 报警来源</div>
-              <div class="info-value">烟感报警器 + 居民电话报警</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label"><i class="el-icon-date"></i> 时间</div>
-              <div class="info-value">2025年4月15日 08:32</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label"><i class="el-icon-partly-cloudy"></i> 天气</div>
-              <div class="info-value">沙尘暴，风力8级</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label"><i class="el-icon-user"></i> 人员情况</div>
-              <div class="info-value">楼内可能有10人被困</div>
-            </div>
-          </div>
-        </div>
+  <div class="event-header">
+    <div class="event-title">
+      <h2>{{ fireAlarmInfo.location ? fireAlarmInfo.location + '火灾事件' : '火灾事件' }}</h2>
+      <span class="event-time">{{ fireAlarmInfo.time || currentTime }}</span>
+    </div>
+    <div class="event-tags">
+      <span class="event-tag" v-if="fireAlarmInfo.weather"><i class="el-icon-warning"></i> {{ fireAlarmInfo.weather }}</span>
+      <span class="event-tag" v-if="fireAlarmInfo.level"><i class="el-icon-hot-water"></i> {{ fireAlarmInfo.level }}</span>
+      <span class="event-tag" v-if="fireAlarmInfo.people"><i class="el-icon-user"></i> {{ fireAlarmInfo.people }}</span>
+      <span class="event-tag" v-if="fireAlarmInfo.source"><i class="el-icon-bell"></i> {{ fireAlarmInfo.source }}</span>
+    </div>
+  </div>
+  <div class="event-description">
+    <div class="info-item">
+      <div class="info-label"><i class="el-icon-location"></i> 火灾发生地点</div>
+      <div class="info-value">{{ fireAlarmInfo.location }}</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label"><i class="el-icon-warning-outline"></i> 火势等级</div>
+      <div class="info-value">{{ fireAlarmInfo.level }}</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label"><i class="el-icon-bell"></i> 报警来源</div>
+      <div class="info-value">{{ fireAlarmInfo.source }}</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label"><i class="el-icon-date"></i> 时间</div>
+      <div class="info-value">{{ fireAlarmInfo.time }}</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label"><i class="el-icon-partly-cloudy"></i> 天气</div>
+      <div class="info-value">{{ fireAlarmInfo.weather }}</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label"><i class="el-icon-user"></i> 人员情况</div>
+      <div class="info-value">{{ fireAlarmInfo.people }}</div>
+    </div>
+  </div>
+</div>
   
         <!-- 阶段标签导航 -->
         <div class="phase-tabs-container">
@@ -343,7 +343,15 @@
   // 基础数据
   const currentTime = ref(new Date().toLocaleString('zh-CN'));
   const activePhase = ref('阶段一');
-  
+
+  const fireAlarmInfo = reactive({
+  location: '',
+  level: '',
+  source: '',
+  time: '',
+  weather: '',
+  people: ''
+});
   // 部门和阶段信息
   const departments = ['消防员', '医生', '保安', '物业'];
   const phaseNames = {
@@ -389,63 +397,7 @@
   });
   
   // 协同矩阵数据
-  const phases = reactive({
-    '阶段一': {
-      '消防员': [
-        '在接警出发途中调度指挥中心查阅3号楼建筑结构图，了解主要通道、疏散楼梯、易燃物分布。',
-        '到场后外部侦查火势，使用热成像仪侦测5层及相邻楼层火源蔓延迹象，随时汇报火势与蔓延方向，并联合物业查监控判断被困人员位置。'
-      ],
-      '医生': [
-        '联合消防收集现场反馈，初步统计被困及受伤人员数量、伤情类型（吸烟、烧伤等）。',
-        '组织急救组携急救装备前往现场，设立火场附近临时医疗点准备急救。'
-      ],
-      '保安': [
-        '启动应急广播及手提喇叭，协助物业指引楼内居民有序撤离，优先老人、儿童及行动不便者。',
-        '安排保安在主要出口、楼道拐角组织撤离、并在安全区域集合清点人数、控制现场秩序。'
-      ],
-      '物业': [
-        '整理发放3号楼结构图、疏散通道、电源总闸等信息，并现场指引消防、医疗人员快速进入目标区域。',
-        '启动社区紧急广播，统计并汇报各楼层已疏散/未撤离人数，协助安保和急救组锁定被困及危险人群。'
-      ]
-    },
-    '阶段二': {
-      '消防员': [
-        '侦查组携空气呼吸器、热成像仪、应急照明沿疏散路线快速到达5层，配合水枪压制火源，优先清理救援通道。',
-        '实施分批疏散，优先撤离5层被困人员并协同急救组转移伤员，同时根据沙尘暴及8级风力灵活调整救援策略，防控火势外延扩散。'
-      ],
-      '医生': [
-        '一组随消防救援队待命火场内外并进行现场急救，另一组在建筑外急救区接收伤员，优先处理吸入性和烧伤患者。',
-        '与医院和急救车密切协作，依据伤情分级送医，保证重伤员通道畅通，实时通报伤情及收治需求。'
-      ],
-      '保安': [
-        '在外围设立警戒线，配合消防封锁危险区，严禁无关人员靠近现场，封控小区道路、辅助医疗车辆通行。',
-        '协助物业持续清点疏散与被困人员，并针对围观、混乱等风险加强现场秩序维护，安抚群众情绪。'
-      ],
-      '物业': [
-        '持续更新被困、已撤离和失联人员数据，动态传递给指挥中心和各救援队伍。',
-        '指派专人陪同消防及医疗队入内救援，确保设备（如楼梯照明）、安全出口畅通，协助相关后勤调度（如担架取用、紧急断电等）。'
-      ]
-    },
-    '阶段三': {
-      '消防员': [
-        '全面搜索5层及相邻楼层，确认无残留火点，防止复燃。',
-        '协同物业和保安清理火场、评估结构安全性，对外通报火灾处置结果。'
-      ],
-      '医生': [
-        '追踪受伤居民救治情况，参与卫生防疫，监测吸入性损伤并安排心理援助。',
-        '整理伤员信息并与医院做好交接，为居民提供后续健康咨询与医疗指导。'
-      ],
-      '保安': [
-        '协助清点最终在场人数，维护火灾现场秩序和受灾居民情绪，防止人员私自返回楼内。',
-        '把控火场警戒范围，协助物业人员开展善后恢复与安全评估。'
-      ],
-      '物业': [
-        '统计失踪、受伤、受灾情况，协助住户妥善安置，安排临时居住及物资发放。',
-        '协调维修公司评估楼体损坏情况，跟进设施检修、清理及通风消杀等后续恢复工作，及时向住户和相关部门通报进展。'
-      ]
-    }
-  });
-  
+  const phases = reactive({});
   // 新增时间线相关的数据
   const timelineData = ref([]);
   const timelineDepartments = ref([]);
@@ -471,6 +423,31 @@
       .then(response => {
         timelineData.value = [...response.data.timeline];
         timelineDepartments.value = [...response.data.departments];
+        console.log('timelineData', timelineData.value);
+        console.log('timelineDepartments', timelineDepartments.value);
+
+        // 动态生成 phases
+        const phaseMap = {
+          0: '阶段一',
+          1: '阶段二',
+          2: '阶段三'
+        };
+        const tempPhases = { '阶段一': {}, '阶段二': {}, '阶段三': {} };
+        const total = timelineData.value.length;
+        timelineData.value.forEach((row, idx) => {
+          let phaseKey = phaseMap[Math.floor(idx / Math.ceil(total / 3))];
+          if (!phaseKey) phaseKey = '阶段三';
+          timelineDepartments.value.forEach(dept => {
+            if (!tempPhases[phaseKey][dept]) tempPhases[phaseKey][dept] = [];
+            if (row[dept] && row[dept].detail) {
+              tempPhases[phaseKey][dept].push(row[dept].detail);
+            }
+          });
+        });
+        Object.keys(phases).forEach(k => delete phases[k]);
+        Object.keys(tempPhases).forEach(k => phases[k] = tempPhases[k]);
+        // 调试输出
+        console.log('phases', JSON.parse(JSON.stringify(phases)));
       })
       .catch(error => {
         console.error("获取时间表数据失败：", error);
@@ -496,7 +473,10 @@
     setInterval(() => {
       currentTime.value = new Date().toLocaleString('zh-CN');
     }, 1000);
-    
+    axios.get('/api/get-fire-alarm-info').then(res => {
+    Object.assign(fireAlarmInfo, res.data || {});
+    console.log('fireAlarmInfo', fireAlarmInfo);
+  });
     // 新增：加载时间线数据
     fetchTimelineData();
   });
