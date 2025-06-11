@@ -69,5 +69,6 @@ SmartCommunity-Admin-main/.env.*.local
 # 忽略 Python 缓存文件
 SmartCommunity-Admin-main/src/api/split/__pycache__/
 
-# 忽略 ONNX 模型文件
-GPT-ONNX/
+# 忽略部署包
+Edge-Deployment/
+Server-Deployment/
