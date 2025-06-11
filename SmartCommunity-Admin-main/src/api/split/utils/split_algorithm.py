@@ -1,34 +1,49 @@
-def find_optimal_split(layer_latencies, output_sizes, bandwidth, alpha=1.0, beta=1.0):
+def find_optimal_split(
+    client_latencies: list[float],
+    server_latencies: list[float],
+    output_sizes: list[float],
+    bandwidth: float,
+    alpha: float = 1.0,
+    beta: float = 1.0
+) -> tuple[int, float]:
     """
-    计算最优分割点（返回分割层编号及总延迟）
-    
-    参数：
-        - layer_latencies: List[float] 每层计算时间（ms）
-        - output_sizes: List[float] 每层输出大小（MB）
-        - bandwidth: float 网络带宽（MB/s）
-        - alpha, beta: float 权重参数（可调节传输与计算权重）
+    计算最优分割点，返回 (optimal_split_index, estimated_total_delay)
 
-    返回：
-        - optimal_split: int 最优分割层编号
-        - min_delay: float 估算总延迟（ms）
+    参数:
+      client_latencies: 客户端每层延迟(ms) 列表
+      server_latencies: 服务器端每层延迟(ms) 列表（与 client_latencies 等长）
+      output_sizes: 每层输出大小(KB) 列表
+      bandwidth: 网络带宽 (B/ms)
+      alpha: 传输时间权重
+      beta: 计算时间权重
+
+    返回:
+      optimal_split: 最优分割层索引
+      total_delay: 对应的端到端延迟(ms)
     """
+    assert len(client_latencies) == len(server_latencies) == len(output_sizes), \
+        "Layer lists must have same length"
+
     min_cost = float('inf')
-    optimal_split = 0
-    total_layers = len(layer_latencies)
+    best_split = 0
+    best_delay = 0.0
+    n = len(client_latencies)
 
-    for split_point in range(total_layers):
-        client_time = sum(layer_latencies[:split_point + 1])
-        transmission_time = (output_sizes[split_point] / bandwidth) * 1000  # 秒 -> 毫秒
-        server_time = sum(layer_latencies[split_point + 1:]) * 0.5  # 服务器效率更高
+    for split in range(n):
+        # 客户端计算：第0层到split层
+        client_time = sum(client_latencies[:split + 1])
+        # 传输时间：split层输出大小 (KB) / (带宽 (B/ms) / 1024)
+        transmission_time = output_sizes[split] / (bandwidth / 1024)    # 转换为 KB/ms
+        # 服务器计算：split层之后的所有层（不含 split 层，因为已在客户端计算）
+        server_time = sum(server_latencies[split + 1:])
 
-        total_cost = alpha * transmission_time + beta * (client_time + server_time)
+        # 综合成本/延迟
+        cost = alpha * transmission_time + beta * (client_time + server_time)
+        delay = client_time + transmission_time + server_time
 
-        if total_cost < min_cost:
-            min_cost = total_cost
-            optimal_split = split_point
+        if cost < min_cost:
+            min_cost = cost
+            best_split = split
+            best_delay = delay
 
-    min_delay = sum(layer_latencies[:optimal_split + 1]) + \
-                (output_sizes[optimal_split] / bandwidth) * 1000 + \
-                sum(layer_latencies[optimal_split + 1:]) * 0.5
-
-    return optimal_split, round(min_delay, 2)
+    return best_split, round(best_delay, 2)
