@@ -1,6 +1,12 @@
-from db import SplitPointResult, LayerMetric  # 假设 ORM 模型从 models 模块导入
+from db import SessionLocal, SplitPointResult, LayerMetric  # 假设 ORM 模型从 models 模块导入
 
-def fetch_split_history(db, page, page_size):
+# -----------------------
+# 分割点检测历史接口
+# -----------------------
+
+def get_split_history(page, page_size):
+    db = SessionLocal()
+    
     offset = (page - 1) * page_size
     total = db.query(SplitPointResult).count()
     split_results = db.query(SplitPointResult)\

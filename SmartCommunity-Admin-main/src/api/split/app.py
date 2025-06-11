@@ -3,11 +3,9 @@
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from db import SessionLocal, get_model_path, get_device_info
-from utils.split_algorithm import find_optimal_split
+from logic.detection import detect_split_point
 from logic.registry import register_device, query_device, register_model, query_model
-from logic.history import fetch_split_history
-import requests
+from logic.history import get_split_history
 
 app = Flask(__name__)
 CORS(app)
@@ -75,7 +73,7 @@ def api_query_model():
 # -------------------- Split Point Detection --------------------
 
 @app.route("/detect_split_point", methods=["POST"])
-def detect_split_point():
+def api_detect_split_point():
     data = request.get_json()
 
     model_id = data.get("model_id")
@@ -83,59 +81,24 @@ def detect_split_point():
     server_id = data.get("server_id")
     input_text = data.get("input_text")
 
-    db = SessionLocal()
-    model_path = get_model_path(db, model_id)
-    edge = get_device_info(db, edge_id)
-    server = get_device_info(db, server_id)
-
-    # 1. 调用 edge 执行评估
-    edge_response = requests.post(
-        f"{edge['endpoint_url']}/run_edge",
-        json={"model_path": model_path, "input_text": input_text},
-        timeout=10
+    result = detect_split_point(
+        model_id=model_id,
+        edge_id=edge_id,
+        server_id=server_id,
+        input_text=input_text
     )
-    edge_data = edge_response.json()
-
-    # 2. 调用 server 执行评估
-    server_response = requests.post(
-        f"{server['endpoint_url']}/run_server",
-        json={"model_path": model_path, "input_text": input_text},
-        timeout=10
-    )
-    server_data = server_response.json()
-
-    # 3. 带宽探测
-    bw_response = requests.post(
-        f"{server['endpoint_url']}/detect_bandwidth",
-        json={"target_url": f"{edge['endpoint_url']}/echo"},
-        timeout=10
-    )
-    bandwidth = bw_response.json().get("bandwidth", 1.0)
-
-    # 4. 合并层评估数据
-    latencies = edge_data["latency"] + server_data["latency"]
-    outputs = edge_data["output_size"] + server_data["output_size"]
-    names = edge_data["layer_names"] + server_data["layer_names"]
-
-    split, delay = find_optimal_split(latencies, outputs, bandwidth)
-
-    return jsonify({
-        "optimal_split": split,
-        "predicted_latency": delay,
-        "layer_latencies": latencies,
-        "output_sizes": outputs,
-        "layer_names": names
-    })
-
+    if result:
+        return jsonify(result)
+    else:
+        return jsonify({'error': 'Failed to detect split point'}), 500
 
 # -------------------- History Query --------------------
 
 @app.route("/get_split_history", methods=["GET"])
-def get_split_history():
+def api_get_split_history():
     page = int(request.args.get("page", 1))
     page_size = int(request.args.get("page_size", 10))
-    db = SessionLocal()
-    results = fetch_split_history(db, page=page, page_size=page_size)
+    results = get_split_history(page=page, page_size=page_size)
     return jsonify(results)
 
 if __name__ == '__main__':
