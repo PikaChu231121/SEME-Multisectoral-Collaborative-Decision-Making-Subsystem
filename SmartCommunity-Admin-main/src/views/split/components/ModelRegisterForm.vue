@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import { registerModel } from '@/api/backend/api/splitTab';
 
 export default {
   name: 'ModelRegisterForm',
@@ -40,7 +40,7 @@ export default {
     async handleSubmit() {
       this.isLoading = true;
       try {
-        await axios.post('/register_model', this.formData);
+        await registerModel(this.formData);
         this.$emit('success');
         this.resetForm();
       } catch (error) {

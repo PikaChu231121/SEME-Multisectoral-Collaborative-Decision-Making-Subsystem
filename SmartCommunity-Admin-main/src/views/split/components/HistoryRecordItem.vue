@@ -34,8 +34,8 @@
 </template>
 
 <script>
-import axios from 'axios';
 import * as echarts from 'echarts';
+import { getSplitHistoryDetail } from '@/api/backend/api/splitTab';
 
 export default {
   name: 'HistoryRecordItem',
@@ -67,7 +67,7 @@ export default {
     async fetchDetails() {
       this.loading = true;
       try {
-        const response = await axios.get(`/get_split_history?task_id=${this.record.task_id}`);
+        const response = await getSplitHistoryDetail(this.record.task_id);
         this.result = response.data;
         this.totalPages = Math.ceil(this.result.layer_names.length / this.itemsPerPage);
         this.currentPage = 1; // Reset to first page after new analysis

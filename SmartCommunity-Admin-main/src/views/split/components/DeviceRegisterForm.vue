@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import { registerDevice } from '@/api/backend/api/splitTab';
 
 export default {
   name: 'DeviceRegisterForm',
@@ -50,7 +50,7 @@ export default {
     async handleSubmit() {
       this.isLoading = true;
       try {
-        await axios.post('/register_device', this.formData);
+        await registerDevice(this.formData);
         this.$emit('success');
         this.resetForm();
       } catch (error) {

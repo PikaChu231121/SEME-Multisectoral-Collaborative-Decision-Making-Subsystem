@@ -49,10 +49,10 @@
 </template>
 
 <script>
-import axios from 'axios';
 import ModelRegisterForm from '@/views/split/components/ModelRegisterForm.vue';
 import DeviceRegisterForm from '@/views/split/components/DeviceRegisterForm.vue';
 import HistoryRecordItem from '@/views/split/components/HistoryRecordItem.vue';
+import { getSplitHistory } from '@/api/backend/api/splitTab';
 
 export default {
   name: 'SplitView',
@@ -77,11 +77,9 @@ export default {
     async fetchHistoryRecords() {
       this.loading = true;
       try {
-        const response = await axios.get('/get_split_history', {
-          params: {
-            page: this.currentPage,
-            page_size: this.pageSize
-          }
+        const response = await getSplitHistory({
+          page: this.currentPage,
+          page_size: this.pageSize
         });
         this.historyRecords = response.data.records;
         this.totalPages = response.data.total_pages;
