@@ -26,7 +26,7 @@ def api_register_device():
         ram=data['ram'],
         endpoint_url=data['endpoint_url']
     )
-    return jsonify(result)
+    return jsonify(result), (200 if result['status'] == 'success' else 403 if result['status'] == 'exists' else 500)
 
 
 @app.route('/delete_device', methods=['DELETE'])
@@ -37,7 +37,7 @@ def api_delete_device():
         return jsonify({'error': 'Missing device_id'}), 400
 
     result = delete_device(device_id)
-    return jsonify(result)
+    return jsonify(result), (200 if result['status'] == 'success' else 404 if result['status'] == 'error' else 500)
 
 
 @app.route('/update_device', methods=['PUT'])
@@ -55,7 +55,7 @@ def api_update_device():
         endpoint_url=data.get('endpoint_url'),
         status=data.get('status')
     )
-    return jsonify(result)
+    return jsonify(result), (200 if result['status'] == 'success' else (404 if "not found" in result['message'] else 400) if result['status'] == 'error' else 500)
 
 
 @app.route('/query_device_list', methods=['GET'])
@@ -107,7 +107,7 @@ def api_register_model():
         version=data['version'],
         storage_path=data['storage_path']
     )
-    return jsonify(result)
+    return jsonify(result), (200 if result['status'] == 'success' else 403 if result['status'] == 'exists' else 500)
 
 
 @app.route('/delete_model', methods=['DELETE'])
@@ -118,7 +118,7 @@ def api_delete_model():
         return jsonify({'error': 'Missing model_id'}), 400
 
     result = delete_model(model_id)
-    return jsonify(result)
+    return jsonify(result), (200 if result['status'] == 'success' else 404 if result['status'] == 'error' else 500)
 
 
 @app.route('/update_model', methods=['PUT'])
@@ -133,7 +133,7 @@ def api_update_model():
         version=data.get('version'),
         storage_path=data.get('storage_path')
     )
-    return jsonify(result)
+    return jsonify(result), (200 if result['status'] == 'success' else 404 if result['status'] == 'error' else 500)
 
 
 @app.route('/query_model_list', methods=['GET'])
@@ -164,7 +164,19 @@ def api_detect_split_point():
     edge_id = data.get("edge_id")
     server_id = data.get("server_id")
     input_text = data.get("input_text")
+    
+    if not all([model_id, edge_id, server_id, input_text]):
+        return jsonify({'error': 'Missing required fields'}), 400
+    if not isinstance(input_text, str):
+        return jsonify({'error': 'input_text must be a string'}), 400
 
+    if not query_device(edge_id):
+        return jsonify({'error': 'Edge device not found'}), 404
+    if not query_device(server_id):
+        return jsonify({'error': 'Server device not found'}), 404
+    if not query_model(model_id):
+        return jsonify({'error': 'Model not found'}), 404
+    
     result = detect_split_point(
         model_id=model_id,
         edge_id=edge_id,

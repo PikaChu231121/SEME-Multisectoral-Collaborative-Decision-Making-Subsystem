@@ -22,6 +22,8 @@
 - **响应状态码**:
   - 200 OK (成功)
   - 400 Bad Request (缺失字段)
+  - 403 Forbidden (已经注册)
+  - 500 Internal Server Error (内部错误)
 
 ### 1.2 查询设备信息
 
@@ -49,6 +51,8 @@
 - **响应状态码**:
   - 200 OK (成功)
   - 400 Bad Request (缺少 device_id)
+  - 404 Not Found (设备不存在)
+  - 500 Internal Server Error (内部错误)
 
 ### 1.4 更新设备
 
@@ -67,6 +71,8 @@
 - **响应状态码**:
   - 200 OK (成功)
   - 400 Bad Request (缺少 device_id)
+  - 404 Not Found (设备不存在)
+  - 500 Internal Server Error (内部错误)
 
 ### 1.5 设备心跳
 
@@ -81,6 +87,7 @@
 - **响应状态码**:
   - 200 OK (成功)
   - 400 Bad Request (缺少 device_id)
+  - 404 Not Found (设备不存在)
 
 ### 1.6 查询设备列表
 
@@ -109,6 +116,8 @@
 - **响应状态码**:
   - 200 OK (成功)
   - 400 Bad Request (缺失字段)
+  - 403 Forbidden (已经注册)
+  - 500 Internal Server Error (内部错误)
 
 ### 2.2 查询模型信息
 
@@ -136,6 +145,8 @@
 - **响应状态码**:
   - 200 OK (成功)
   - 400 Bad Request (缺少 model_id)
+  - 404 Not Found (模型不存在)
+  - 500 Internal Server Error (内部错误)
 
 ### 2.4 更新模型
 
@@ -151,6 +162,8 @@
 - **响应状态码**:
   - 200 OK (成功)
   - 400 Bad Request (缺少 model_id)
+  - 404 Not Found (模型不存在)
+  - 500 Internal Server Error (内部错误)
 
 ### 2.5 查询模型列表
 
@@ -186,6 +199,7 @@
 - **响应状态码**:
   - 200 OK (成功)
   - 400 Bad Request (参数错误)
+  - 404 Not Found (模型/边缘设备/服务器设备不存在)
   - 500 Internal Server Error (服务错误)
 
 ---
