@@ -136,6 +136,18 @@ def heartbeat(device_id, endpoint_url=None):
     return {"status": "success", "message": "Heartbeat updated."}
 
 
+def mark_offline_devices():
+    db = SessionLocal()
+    
+    try:
+        cutoff = datetime.datetime.utcnow() - datetime.timedelta(hours=1)  # 1h 超时阈值
+        db.query(Device).filter(Device.last_heartbeat is not None and Device.last_heartbeat < cutoff, Device.status=='online') \
+            .update({"status": "offline"})
+        db.commit()
+    finally:
+        db.close()
+
+
 # -----------------------
 # 模型管理接口
 # -----------------------

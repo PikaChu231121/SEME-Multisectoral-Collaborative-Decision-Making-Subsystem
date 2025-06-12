@@ -6,6 +6,7 @@ from flask_cors import CORS
 from logic.detection import detect_split_point
 from logic.registry import *
 from logic.history import get_split_history
+from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 CORS(app)
@@ -199,3 +200,6 @@ def api_get_split_history():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5002)
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(mark_offline_devices, 'interval', seconds=10)
+    scheduler.start()
