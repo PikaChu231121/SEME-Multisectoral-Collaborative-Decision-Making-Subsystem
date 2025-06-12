@@ -75,6 +75,27 @@ def update_device(device_id, cpu=None, gpu=None, ram=None, endpoint_url=None, st
     return {"status": "success", "message": "Device updated."}
 
 
+def list_devices():
+    db = SessionLocal()
+    
+    try:
+        devices = db.query(Device).all()
+    finally:
+        db.close()
+        
+    return [
+        {
+            "device_id": device.device_id,
+            "cpu": device.cpu,
+            "gpu": device.gpu,
+            "ram": device.ram,
+            "endpoint_url": device.endpoint_url,
+            "status": device.status,
+            "create_time": device.create_time.strftime("%Y-%m-%d %H:%M:%S")
+        } for device in devices
+    ]
+    
+
 def query_device(device_id):
     db = SessionLocal()
     
@@ -175,6 +196,24 @@ def update_model(model_id, version=None, storage_path=None):
         db.close()
         
     return {"status": "success", "message": "Model updated."}
+
+
+def list_models():
+    db = SessionLocal()
+    
+    try:
+        models = db.query(Model).all()
+    finally:
+        db.close()
+        
+    return [
+        {
+            "model_id": model.model_id,
+            "version": model.version,
+            "storage_path": model.storage_path,
+            "upload_time": model.upload_time.strftime("%Y-%m-%d %H:%M:%S")
+        } for model in models
+    ]
 
 
 def query_model(model_id):

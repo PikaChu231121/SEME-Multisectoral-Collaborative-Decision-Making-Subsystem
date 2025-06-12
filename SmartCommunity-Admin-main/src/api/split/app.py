@@ -58,6 +58,12 @@ def api_update_device():
     return jsonify(result)
 
 
+@app.route('/query_device_list', methods=['GET'])
+def api_query_device_list():
+    devices = list_devices()
+    return jsonify(devices)
+
+
 @app.route('/query_device_info', methods=['GET'])
 def api_query_device():
     device_id = request.args.get('device_id')
@@ -128,6 +134,12 @@ def api_update_model():
         storage_path=data.get('storage_path')
     )
     return jsonify(result)
+
+
+@app.route('/query_model_list', methods=['GET'])
+def api_query_model_list():
+    models = list_models()
+    return jsonify(models)
 
 
 @app.route('/query_model_info', methods=['GET'])

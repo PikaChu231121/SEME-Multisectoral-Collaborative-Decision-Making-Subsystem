@@ -82,6 +82,15 @@
   - 200 OK (成功)
   - 400 Bad Request (缺少 device_id)
 
+### 1.6 查询设备列表
+
+- **URL**: `/query_device_list`
+- **方法**: `GET`
+- **请求参数**: 无
+- **返回值** (JSON): 设备对象数组，如 [ { "device_id": string, "cpu": string, "gpu": string, "ram": string, "endpoint_url": string, "status": string, "create_time": string }, ... ]
+- **响应状态码**:
+  - 200 OK (成功)
+
 ---
 
 ## 2. 模型管理接口
@@ -142,6 +151,15 @@
 - **响应状态码**:
   - 200 OK (成功)
   - 400 Bad Request (缺少 model_id)
+
+### 2.5 查询模型列表
+
+- **URL**: `/query_model_list`
+- **方法**: `GET`
+- **请求参数**: 无
+- **返回值** (JSON): 模型对象数组，如 [ { "model_id": string, "version": string, "storage_path": string, "upload_time": string }, ... ]
+- **响应状态码**:
+  - 200 OK (成功)
 
 ---
 

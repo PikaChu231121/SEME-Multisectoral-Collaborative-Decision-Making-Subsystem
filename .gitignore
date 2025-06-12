@@ -67,7 +67,8 @@ SmartCommunity-Admin-main/.env.*.local
 /.nb-gradle/
 
 # 忽略 Python 缓存文件
-SmartCommunity-Admin-main/src/api/split/__pycache__/
+*.pyc
+__pycache__/
 
 # 忽略部署包
 Edge-Deployment/
