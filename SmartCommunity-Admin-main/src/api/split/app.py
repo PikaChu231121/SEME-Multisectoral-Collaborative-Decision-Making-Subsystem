@@ -4,7 +4,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from logic.detection import detect_split_point
-from logic.registry import register_device, query_device, register_model, query_model
+from logic.registry import *
 from logic.history import get_split_history
 
 app = Flask(__name__)
@@ -29,6 +29,35 @@ def api_register_device():
     return jsonify(result)
 
 
+@app.route('/delete_device', methods=['DELETE'])
+def api_delete_device():
+    data = request.get_json()
+    device_id = data.get('device_id')
+    if not device_id:
+        return jsonify({'error': 'Missing device_id'}), 400
+
+    result = delete_device(device_id)
+    return jsonify(result)
+
+
+@app.route('/update_device', methods=['PUT'])
+def api_update_device():
+    data = request.get_json()
+    device_id = data.get('device_id')
+    if not device_id:
+        return jsonify({'error': 'Missing device_id'}), 400
+
+    result = update_device(
+        device_id=device_id,
+        cpu=data.get('cpu'),
+        gpu=data.get('gpu'),
+        ram=data.get('ram'),
+        endpoint_url=data.get('endpoint_url'),
+        status=data.get('status')
+    )
+    return jsonify(result)
+
+
 @app.route('/query_device_info', methods=['GET'])
 def api_query_device():
     device_id = request.args.get('device_id')
@@ -40,6 +69,23 @@ def api_query_device():
         return jsonify(info)
     else:
         return jsonify({'error': 'Device not found'}), 404
+
+
+@app.route('/heartbeat', methods=['POST'])
+def api_heartbeat():
+    data = request.get_json()
+    device_id    = data.get('device_id')
+    endpoint_url = data.get('endpoint_url')
+
+    if not device_id:
+        return jsonify({'error': 'Missing device_id'}), 400
+
+    result = heartbeat(
+        device_id=device_id,
+        endpoint_url=endpoint_url
+    )
+    return jsonify(result)
+
 
 # -------------------- Model API --------------------
 
@@ -54,6 +100,32 @@ def api_register_model():
         model_id=data['model_id'],
         version=data['version'],
         storage_path=data['storage_path']
+    )
+    return jsonify(result)
+
+
+@app.route('/delete_model', methods=['DELETE'])
+def api_delete_model():
+    data = request.get_json()
+    model_id = data.get('model_id')
+    if not model_id:
+        return jsonify({'error': 'Missing model_id'}), 400
+
+    result = delete_model(model_id)
+    return jsonify(result)
+
+
+@app.route('/update_model', methods=['PUT'])
+def api_update_model():
+    data = request.get_json()
+    model_id = data.get('model_id')
+    if not model_id:
+        return jsonify({'error': 'Missing model_id'}), 400
+
+    result = update_model(
+        model_id=model_id,
+        version=data.get('version'),
+        storage_path=data.get('storage_path')
     )
     return jsonify(result)
 

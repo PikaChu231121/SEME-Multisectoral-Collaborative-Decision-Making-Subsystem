@@ -19,6 +19,8 @@ def register_device(device_id, cpu, gpu, ram, endpoint_url):
             gpu=gpu,
             ram=ram,
             endpoint_url=endpoint_url,
+            status="offline",  # 默认状态为离线
+            last_heartbeat=None,  # 初始时没有心跳记录
             create_time=datetime.datetime.utcnow()
         )
         db.add(new_device)
@@ -27,6 +29,50 @@ def register_device(device_id, cpu, gpu, ram, endpoint_url):
         db.close()
         
     return {"status": "success", "message": "Device registered."}
+
+
+def delete_device(device_id):
+    db = SessionLocal()
+    
+    try:
+        device = db.query(Device).filter_by(device_id=device_id).first()
+        if not device:
+            return {"status": "error", "message": "Device not found."}
+        
+        db.delete(device)
+        db.commit()
+    finally:
+        db.close()
+        
+    return {"status": "success", "message": "Device deleted."}
+
+
+def update_device(device_id, cpu=None, gpu=None, ram=None, endpoint_url=None, status=None):
+    db = SessionLocal()
+    
+    try:
+        device = db.query(Device).filter_by(device_id=device_id).first()
+        if not device:
+            return {"status": "error", "message": "Device not found."}
+        
+        if cpu:
+            device.cpu = cpu
+        if gpu:
+            device.gpu = gpu
+        if ram:
+            device.ram = ram
+        if endpoint_url:
+            device.endpoint_url = endpoint_url
+        if status:
+            if status not in ["online", "offline"]:
+                return {"status": "error", "message": "Invalid status. Must be 'online' or 'offline'."}
+            device.status = status
+        
+        db.commit()
+    finally:
+        db.close()
+        
+    return {"status": "success", "message": "Device updated."}
 
 
 def query_device(device_id):
@@ -45,8 +91,28 @@ def query_device(device_id):
         "gpu": device.gpu,
         "ram": device.ram,
         "endpoint_url": device.endpoint_url,
+        "status": device.status,
         "create_time": device.create_time.strftime("%Y-%m-%d %H:%M:%S")
     }
+
+
+def heartbeat(device_id, endpoint_url=None):
+    db = SessionLocal()
+    
+    try:
+        device = db.query(Device).filter_by(device_id=device_id).first()
+        if not device:
+            return {"status": "error", "message": "Device not found."}
+        
+        device.last_heartbeat = datetime.datetime.utcnow()
+        if endpoint_url:
+            device.endpoint_url = endpoint_url
+        
+        db.commit()
+    finally:
+        db.close()
+        
+    return {"status": "success", "message": "Heartbeat updated."}
 
 
 # -----------------------
@@ -73,6 +139,42 @@ def register_model(model_id, version, storage_path):
         db.close()
         
     return {"status": "success", "message": "Model registered."}
+
+
+def delete_model(model_id):
+    db = SessionLocal()
+    
+    try:
+        model = db.query(Model).filter_by(model_id=model_id).first()
+        if not model:
+            return {"status": "error", "message": "Model not found."}
+        
+        db.delete(model)
+        db.commit()
+    finally:
+        db.close()
+        
+    return {"status": "success", "message": "Model deleted."}
+
+
+def update_model(model_id, version=None, storage_path=None):
+    db = SessionLocal()
+    
+    try:
+        model = db.query(Model).filter_by(model_id=model_id).first()
+        if not model:
+            return {"status": "error", "message": "Model not found."}
+        
+        if version:
+            model.version = version
+        if storage_path:
+            model.storage_path = storage_path
+        
+        db.commit()
+    finally:
+        db.close()
+        
+    return {"status": "success", "message": "Model updated."}
 
 
 def query_model(model_id):

@@ -17,12 +17,14 @@ Base = declarative_base()
 
 class Device(Base):
     __tablename__ = "devices"
-    device_id = Column(String(64), primary_key=True)
-    cpu = Column(String(128))
-    gpu = Column(String(128))
-    ram = Column(String(64))
-    endpoint_url = Column(String(255))
-    create_time = Column(DateTime, default=datetime.datetime.utcnow)
+    device_id      = Column(String(64), primary_key=True, index=True)
+    cpu            = Column(String(128))
+    gpu            = Column(String(128))
+    ram            = Column(String(64))
+    endpoint_url   = Column(String(256))
+    status         = Column(String(10), nullable=False, default="offline")
+    last_heartbeat = Column(DateTime, nullable=True)
+    create_time    = Column(DateTime, default=datetime.datetime.utcnow)
 
 
 class Model(Base):
