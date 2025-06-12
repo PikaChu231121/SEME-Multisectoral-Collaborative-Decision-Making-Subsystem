@@ -30,12 +30,57 @@
 - **请求参数** (QueryString):
   - device_id: string  设备唯一标识
 - **返回值** (JSON):
-  - 成功: { "device_id": string, "cpu": string, "gpu": string, "ram": string, "endpoint_url": string, "create_time": string }
+  - 成功: { "device_id": string, "cpu": string, "gpu": string, "ram": string, "endpoint_url": string, "status": string, "create_time": string }
   - 失败: { "error": string }
 - **响应状态码**:
   - 200 OK (成功)
   - 400 Bad Request (缺少 device_id)
   - 404 Not Found (设备不存在)
+
+### 1.3 删除设备
+
+- **URL**: `/delete_device`
+- **方法**: `DELETE`
+- **请求参数** (JSON):
+  - device_id: string  设备唯一标识
+- **返回值** (JSON):
+  - 成功: { "status": string, "message": string }
+  - 失败: { "error": string }
+- **响应状态码**:
+  - 200 OK (成功)
+  - 400 Bad Request (缺少 device_id)
+
+### 1.4 更新设备
+
+- **URL**: `/update_device`
+- **方法**: `PUT`
+- **请求参数** (JSON):
+  - device_id: string  设备唯一标识
+  - cpu: string  (可选) CPU 信息
+  - gpu: string  (可选) GPU 信息
+  - ram: string  (可选) 内存信息
+  - endpoint_url: string  (可选) 设备访问地址
+  - status: string  (可选) 设备状态 ∈ { "online", "offline" }
+- **返回值** (JSON):
+  - 成功: { "status": string, "message": string }
+  - 失败: { "error": string }
+- **响应状态码**:
+  - 200 OK (成功)
+  - 400 Bad Request (缺少 device_id)
+
+### 1.5 设备心跳
+
+- **URL**: `/heartbeat`
+- **方法**: `POST`
+- **请求参数** (JSON):
+  - device_id: string  设备唯一标识
+  - endpoint_url: string  设备访问地址 (可选)
+- **返回值** (JSON):
+  - 成功: { "status": string, "message": string }
+  - 失败: { "error": string }
+- **响应状态码**:
+  - 200 OK (成功)
+  - 400 Bad Request (缺少 device_id)
 
 ---
 
@@ -69,6 +114,34 @@
   - 200 OK (成功)
   - 400 Bad Request (缺少 model_id)
   - 404 Not Found (模型不存在)
+
+### 2.3 删除模型
+
+- **URL**: `/delete_model`
+- **方法**: `DELETE`
+- **请求参数** (JSON):
+  - model_id: string  模型唯一标识
+- **返回值** (JSON):
+  - 成功: { "status": string, "message": string }
+  - 失败: { "error": string }
+- **响应状态码**:
+  - 200 OK (成功)
+  - 400 Bad Request (缺少 model_id)
+
+### 2.4 更新模型
+
+- **URL**: `/update_model`
+- **方法**: `PUT`
+- **请求参数** (JSON):
+  - model_id: string  模型唯一标识
+  - version: string  (可选) 模型版本号
+  - storage_path: string  (可选) 模型存储路径
+- **返回值** (JSON):
+  - 成功: { "status": string, "message": string }
+  - 失败: { "error": string }
+- **响应状态码**:
+  - 200 OK (成功)
+  - 400 Bad Request (缺少 model_id)
 
 ---
 
