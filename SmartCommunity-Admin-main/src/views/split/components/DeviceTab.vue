@@ -65,21 +65,42 @@
                   {{ device.status }}
                 </div>
               </div>
-              <button class="delete-btn" @click="confirmDelete(device.device_id)">
-                删除
-              </button>
+              <div class="card-btn-group">
+                <button class="card-btn detail-btn" @click="showDetail(device)">
+                  详情
+                </button>
+                <button class="card-btn delete-btn" @click="confirmDelete(device.device_id)">
+                  删除
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- 详情弹窗 -->
+     <div v-if="showDetailDevice" class="overlay">
+      <div class="overlay-content">
+        <h4>设备详情</h4>
+        <p>设备ID：{{ selectedDevice.deviceId }}</p>
+        <p>CPU信息：{{ selectedDevice.cpu }}</p>
+        <p>GPU信息：{{ selectedDevice.gpu }}</p>
+        <p>内存信息：{{ selectedDevice.ram }}</p>
+        <p>访问地址：{{ selectedDevice.endpoint_url }}</p>
+        <p>设备状态：{{ selectedDevice.status }}</p>
+        <div class="overlay-actions">
+          <button class="cancel-btn" @click="showDetailDevice = false">关闭</button>
+        </div>
+      </div>
+     </div>
+
     <!-- 删除确认弹窗 -->
-    <div v-if="showDeleteConfirm" class="modal-overlay">
-      <div class="modal-content">
+    <div v-if="showDeleteConfirm" class="overlay">
+      <div class="overlay-content">
         <h4>确认删除</h4>
         <p>确定要删除此设备吗？此操作不可恢复。</p>
-        <div class="modal-actions">
+        <div class="overlay-actions">
           <button class="cancel-btn" @click="showDeleteConfirm = false">取消</button>
           <button class="confirm-btn" @click="handleDelete" :disabled="isDeleting">
             {{ isDeleting ? '删除中...' : '确认删除' }}
@@ -109,6 +130,8 @@ export default {
       loading: false,
       error: null,
       deviceList: [],
+      showDetailDevice: false,
+      selectedDevice: null,
       showDeleteConfirm: false,
       isDeleting: false,
       deviceToDelete: null
@@ -155,6 +178,10 @@ export default {
         ram: '',
         endpoint_url: ''
       };
+    },
+    showDetail(device){
+      this.selectedDevice = device;
+      this.showDetailDevice = true;
     },
     confirmDelete(deviceId) {
       this.deviceToDelete = deviceId;
@@ -298,10 +325,26 @@ button:disabled {
   color: #c62828;
 }
 
-.delete-btn {
-  background: #e74c3c;
+.card-btn-group {
+  display: flex;
+  gap: 10px;
+}
+
+.card-btn {
   padding: 6px 12px;
   font-size: 0.9em;
+}
+
+.detail-btn {
+  background: #2ecc71;
+}
+
+.detail-btn:hover {
+  background: #27ae60;
+}
+
+.delete-btn {
+  background: #e74c3c;
 }
 
 .delete-btn:hover {
@@ -321,7 +364,7 @@ button:disabled {
 }
 
 /* 弹窗样式 */
-.modal-overlay {
+.overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -334,7 +377,7 @@ button:disabled {
   z-index: 1000;
 }
 
-.modal-content {
+.overlay-content {
   background: white;
   padding: 20px;
   border-radius: 8px;
@@ -342,17 +385,17 @@ button:disabled {
   max-width: 90%;
 }
 
-.modal-content h4 {
+.overlay-content h4 {
   margin: 0 0 15px 0;
   color: #2c3e50;
 }
 
-.modal-content p {
+.overlay-content p {
   margin: 0 0 20px 0;
   color: #666;
 }
 
-.modal-actions {
+.overlay-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
