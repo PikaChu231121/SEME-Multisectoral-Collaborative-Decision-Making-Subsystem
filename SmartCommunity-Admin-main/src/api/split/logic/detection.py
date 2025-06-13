@@ -35,15 +35,19 @@ def detect_split_point(model_id, edge_id, server_id, input_text):
         server_data = server_response.json()
 
         # 3. 带宽探测
-        bw_response = requests.post(
-            f"{server.endpoint_url}/detect_bandwidth",
-            json={"target_url": f"{edge.endpoint_url}/echo"},
-            timeout=10
-        )
-        bandwidth = bw_response.json().get("bandwidth", last_bandwidth)
+        global last_bandwidth
+        for _ in range(10):
+            bw_response = requests.post(
+                f"{server.endpoint_url}/detect_bandwidth",
+                json={"target_url": f"{edge.endpoint_url}/echo"},
+                timeout=10
+            )
+            bandwidth = bw_response.json().get("bandwidth", last_bandwidth)
+            if bandwidth > 0:
+                break
         if bandwidth == 0:
             bandwidth = last_bandwidth
-        bandwidth = max(bandwidth, 0.1)  # 确保带宽不为0
+        last_bandwidth = max(bandwidth, 0.1)  # 确保带宽不为0
 
         # 4. 合并层评估数据
         client_latencies = edge_data["latency"]
