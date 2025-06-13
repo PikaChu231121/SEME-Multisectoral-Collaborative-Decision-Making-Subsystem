@@ -51,17 +51,36 @@
               :key="model.model_id"
               class="model-card"
             >
-              <div class="model-id">模型ID：{{ model.model_id }}</div>
+              <div class="model-info">
+                <div class="model-id">模型ID：{{ model.model_id }}</div>
+              </div>
+              <button class="delete-btn" @click="confirmDelete(model.model_id)">
+                删除
+              </button>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- 删除确认弹窗 -->
+  <div v-if="showDeleteConfirm" class="modal-overlay">
+    <div class="modal-content">
+      <h4>确认删除</h4>
+      <p>确定要删除此模型吗？此操作不可恢复。</p>
+      <div class="modal-actions">
+        <button class="cancel-btn" @click="showDeleteConfirm = false">取消</button>
+        <button class="confirm-btn" @click="handleDelete" :disabled="isDeleting">
+          {{ isDeleting ? '删除中...' : '确认删除' }}
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
-import { registerModel, queryModelList } from '@/api/backend/api/splitTab';
+import { registerModel, queryModelList, deleteModel } from '@/api/backend/api/splitTab';
 
 export default {
   name: 'ModelRegisterForm',
@@ -76,7 +95,10 @@ export default {
       isLoading: false,
       loading: false,
       error: null,
-      modelList: []
+      modelList: [],
+      showDeleteConfirm: false,
+      isDeleting: false,
+      modelToDelete: null
     };
   },
   watch: {
@@ -118,6 +140,27 @@ export default {
         version: '',
         storage_path: ''
       };
+    },
+    confirmDelete(modelId) {
+      this.modelToDelete = modelId;
+      this.showDeleteConfirm = true;
+    },
+    async handleDelete() {
+      if (!this.modelToDelete) return;
+
+      this.isDeleting = true;
+      try {
+        await deleteModel({ model_id: this.modelToDelete });
+        this.$message.success('删除成功');
+        this.showDeleteConfirm = false;
+        this.modelToDelete = null;
+        // 重新加载列表
+        await this.fetchModelList();
+      } catch (error) {
+        this.$message.error(error.response?.data?.message || '删除失败');
+      } finally {
+        this.isDeleting = false;
+      }
     }
   }
 };
@@ -177,7 +220,6 @@ input {
 }
 
 button {
-  width: 100%;
   padding: 10px;
   background: #3498db;
   color: white;
@@ -207,11 +249,31 @@ button:disabled {
   border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   border: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.model-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
 }
 
 .model-id {
   color: #2c3e50;
   font-weight: 500;
+}
+
+.delete-btn {
+  background: #e74c3c;
+  padding: 6px 12px;
+  font-size: 0.9em;
+}
+
+.delete-btn:hover {
+  background: #c0392b;
 }
 
 .loading {
@@ -224,6 +286,52 @@ button:disabled {
   text-align: center;
   padding: 20px;
   color: #e74c3c;
+}
+
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  min-width: 300px;
+  max-width: 90%;
+}
+
+.modal-content h4 {
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+}
+
+.modal-content p {
+  margin: 0 0 20px 0;
+  color: #666;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.cancel-btn {
+  background: #95a5a6;
+}
+
+.confirm-btn {
+  background: #e74c3c;
 }
 
 /* 自定义滚动条样式 */

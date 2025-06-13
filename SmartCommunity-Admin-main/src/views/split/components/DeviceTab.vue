@@ -59,12 +59,31 @@
               :key="device.device_id"
               class="device-card"
             >
-              <div class="device-id">设备ID：{{ device.device_id }}</div>
-              <div class="device-status" :class="device.status">
-                {{ device.status }}
+              <div class="device-info">
+                <div class="device-id">设备ID：{{ device.device_id }}</div>
+                <div class="device-status" :class="device.status">
+                  {{ device.status }}
+                </div>
               </div>
+              <button class="delete-btn" @click="confirmDelete(device.device_id)">
+                删除
+              </button>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除确认弹窗 -->
+    <div v-if="showDeleteConfirm" class="modal-overlay">
+      <div class="modal-content">
+        <h4>确认删除</h4>
+        <p>确定要删除此设备吗？此操作不可恢复。</p>
+        <div class="modal-actions">
+          <button class="cancel-btn" @click="showDeleteConfirm = false">取消</button>
+          <button class="confirm-btn" @click="handleDelete" :disabled="isDeleting">
+            {{ isDeleting ? '删除中...' : '确认删除' }}
+          </button>
         </div>
       </div>
     </div>
@@ -72,7 +91,7 @@
 </template>
 
 <script>
-import { registerDevice, queryDeviceList } from '@/api/backend/api/splitTab';
+import { registerDevice, queryDeviceList, deleteDevice } from '@/api/backend/api/splitTab';
 
 export default {
   name: 'DeviceRegisterForm',
@@ -89,7 +108,10 @@ export default {
       isLoading: false,
       loading: false,
       error: null,
-      deviceList: []
+      deviceList: [],
+      showDeleteConfirm: false,
+      isDeleting: false,
+      deviceToDelete: null
     };
   },
   watch: {
@@ -133,6 +155,27 @@ export default {
         ram: '',
         endpoint_url: ''
       };
+    },
+    confirmDelete(deviceId) {
+      this.deviceToDelete = deviceId;
+      this.showDeleteConfirm = true;
+    },
+    async handleDelete() {
+      if (!this.deviceToDelete) return;
+      
+      this.isDeleting = true;
+      try {
+        await deleteDevice({ device_id: this.deviceToDelete });
+        this.$message.success('删除成功');
+        this.showDeleteConfirm = false;
+        this.deviceToDelete = null;
+        // 重新加载列表
+        await this.fetchDeviceList();
+      } catch (error) {
+        this.$message.error(error.response?.data?.message || '删除失败');
+      } finally {
+        this.isDeleting = false;
+      }
     }
   }
 };
@@ -192,7 +235,6 @@ input {
 }
 
 button {
-  width: 100%;
   padding: 10px;
   background: #3498db;
   color: white;
@@ -223,15 +265,20 @@ button:disabled {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   border: 1px solid #eee;
   display: flex;
-  flex-direction: row;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
+}
+
+.device-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
 }
 
 .device-id {
   color: #2c3e50;
   font-weight: 500;
-  flex: 1;
 }
 
 .device-status {
@@ -239,7 +286,6 @@ button:disabled {
   padding: 4px 8px;
   border-radius: 4px;
   text-align: center;
-  flex: 1;
 }
 
 .device-status.active {
@@ -252,6 +298,16 @@ button:disabled {
   color: #c62828;
 }
 
+.delete-btn {
+  background: #e74c3c;
+  padding: 6px 12px;
+  font-size: 0.9em;
+}
+
+.delete-btn:hover {
+  background: #c0392b;
+}
+
 .loading {
   text-align: center;
   padding: 20px;
@@ -262,6 +318,52 @@ button:disabled {
   text-align: center;
   padding: 20px;
   color: #e74c3c;
+}
+
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  min-width: 300px;
+  max-width: 90%;
+}
+
+.modal-content h4 {
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+}
+
+.modal-content p {
+  margin: 0 0 20px 0;
+  color: #666;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.cancel-btn {
+  background: #95a5a6;
+}
+
+.confirm-btn {
+  background: #e74c3c;
 }
 
 /* 自定义滚动条样式 */

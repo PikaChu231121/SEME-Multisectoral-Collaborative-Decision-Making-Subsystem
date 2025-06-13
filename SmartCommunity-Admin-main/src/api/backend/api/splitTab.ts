@@ -36,3 +36,13 @@ export const queryModelList = () => {
 export const queryDeviceList = () => {
   return axios.get(`${BASE_URL}/query_device_list`);
 };
+
+// 模型删除接口
+export const deleteModel = (data: {model_id: string;}) => {
+  return axios.delete(`${BASE_URL}/delete_model`, { data });
+}
+
+// 设备删除接口
+export const deleteDevice = (data: {device_id: string;}) => {
+  return axios.delete(`${BASE_URL}/delete_device`, { data });
+}
