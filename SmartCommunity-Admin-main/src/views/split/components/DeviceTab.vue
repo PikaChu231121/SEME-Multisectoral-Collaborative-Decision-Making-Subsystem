@@ -66,6 +66,9 @@
                 </div>
               </div>
               <div class="card-btn-group">
+                <button class="card-btn update-btn" @click="showUpdate(device)">
+                  更新
+                </button>
                 <button class="card-btn detail-btn" @click="showDetail(device)">
                   详情
                 </button>
@@ -79,11 +82,46 @@
       </div>
     </div>
 
+    <!-- 更新弹窗 -->
+    <div v-if="showUpdateDevice" class="detail-overlay">
+      <div class="overlay-content">
+        <h4>更新设备</h4>
+        <form @submit.prevent="handleUpdate">
+          <div class="form-group">
+            <label>CPU信息</label>
+            <input v-model="updateForm.cpu" type="text" required />
+          </div>
+          <div class="form-group">
+            <label>GPU信息</label>
+            <input v-model="updateForm.gpu" type="text" required />
+          </div>
+          <div class="form-group">
+            <label>内存信息</label>
+            <input v-model="updateForm.ram" type="text" required />
+          </div>
+          <div class="form-group">
+            <label>访问地址</label>
+            <input v-model="updateForm.endpoint_url" type="text" required />
+          </div>
+          <div class="form-group">
+            <label>设备状态</label>
+            <input v-model="updateForm.status" type="text" required />
+          </div>
+          <div class="overlay-actions">
+            <button type="button" class="cancel-btn" @click="showUpdateDevice = false">返回</button>
+            <button type="submit" class="confirm-btn" :disabled="isUpdating">
+              {{ isUpdating ? '更新中...' : '提交更新' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- 详情弹窗 -->
-     <div v-if="showDetailDevice" class="overlay">
+    <div v-if="showDetailDevice" class="detail-overlay">
       <div class="overlay-content">
         <h4>设备详情</h4>
-        <p>设备ID：{{ selectedDevice.deviceId }}</p>
+        <p>设备ID：{{ selectedDevice.device_id }}</p>
         <p>CPU信息：{{ selectedDevice.cpu }}</p>
         <p>GPU信息：{{ selectedDevice.gpu }}</p>
         <p>内存信息：{{ selectedDevice.ram }}</p>
@@ -93,14 +131,14 @@
           <button class="cancel-btn" @click="showDetailDevice = false">关闭</button>
         </div>
       </div>
-     </div>
+    </div>
 
     <!-- 删除确认弹窗 -->
-    <div v-if="showDeleteConfirm" class="overlay">
-      <div class="overlay-content">
+    <div v-if="showDeleteConfirm" class="alert-window">
+      <div class="alert-content">
         <h4>确认删除</h4>
         <p>确定要删除此设备吗？此操作不可恢复。</p>
-        <div class="overlay-actions">
+        <div class="alert-actions">
           <button class="cancel-btn" @click="showDeleteConfirm = false">取消</button>
           <button class="confirm-btn" @click="handleDelete" :disabled="isDeleting">
             {{ isDeleting ? '删除中...' : '确认删除' }}
@@ -112,7 +150,7 @@
 </template>
 
 <script>
-import { registerDevice, queryDeviceList, deleteDevice } from '@/api/backend/api/splitTab';
+import { registerDevice, queryDeviceList, deleteDevice, updateDevice } from '@/api/backend/api/splitTab';
 
 export default {
   name: 'DeviceRegisterForm',
@@ -126,11 +164,20 @@ export default {
         ram: '',
         endpoint_url: ''
       },
+      updateForm: {
+        cpu: '',
+        gpu: '',
+        ram: '',
+        endpoint_url: '',
+        status: ''
+      },
       isLoading: false,
+      isUpdating: false,
       loading: false,
       error: null,
       deviceList: [],
       showDetailDevice: false,
+      showUpdateDevice: false,
       selectedDevice: null,
       showDeleteConfirm: false,
       isDeleting: false,
@@ -145,6 +192,7 @@ export default {
     }
   },
   methods: {
+    // 提交注册表单
     async handleSubmit() {
       this.isLoading = true;
       try {
@@ -157,6 +205,7 @@ export default {
         this.isLoading = false;
       }
     },
+    // 查询设备列表
     async fetchDeviceList() {
       this.loading = true;
       this.error = null;
@@ -170,6 +219,7 @@ export default {
         this.loading = false;
       }
     },
+    // 清空表单
     resetForm() {
       this.formData = {
         device_id: '',
@@ -179,14 +229,17 @@ export default {
         endpoint_url: ''
       };
     },
+    // 详细信息
     showDetail(device){
       this.selectedDevice = device;
       this.showDetailDevice = true;
     },
+    // 删除确认提示
     confirmDelete(deviceId) {
       this.deviceToDelete = deviceId;
       this.showDeleteConfirm = true;
     },
+    // 删除设备
     async handleDelete() {
       if (!this.deviceToDelete) return;
       
@@ -202,6 +255,38 @@ export default {
         this.$message.error(error.response?.data?.message || '删除失败');
       } finally {
         this.isDeleting = false;
+      }
+    },
+    // 填写更新前信息
+    showUpdate(device) {
+      this.selectedDevice = device;
+      this.updateForm = {
+        cpu: device.cpu,
+        gpu: device.gpu,
+        ram: device.ram,
+        endpoint_url: device.endpoint_url,
+        status: device.status
+      };
+      this.showUpdateDevice = true;
+    },
+    // 提交更新
+    async handleUpdate() {
+      if (!this.selectedDevice) return;
+      
+      this.isUpdating = true;
+      try {
+        await updateDevice({
+          device_id: this.selectedDevice.device_id,
+          ...this.updateForm
+        });
+        this.$message.success('更新成功');
+        this.showUpdateDevice = false;
+        // 重新加载列表
+        await this.fetchDeviceList();
+      } catch (error) {
+        this.$message.error(error.response?.data?.message || '更新失败');
+      } finally {
+        this.isUpdating = false;
       }
     }
   }
@@ -351,6 +436,14 @@ button:disabled {
   background: #c0392b;
 }
 
+.update-btn {
+  background: #3498db;
+}
+
+.update-btn:hover {
+  background: #2980b9;
+}
+
 .loading {
   text-align: center;
   padding: 20px;
@@ -364,7 +457,64 @@ button:disabled {
 }
 
 /* 弹窗样式 */
-.overlay {
+.detail-overlay {
+  position: fixed;  /* 固定定位，覆盖整个页面 */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);  /* 半透明黑色遮罩 */
+  display: flex;
+  justify-content: center;  /* 水平居中 */
+  align-items: center;     /* 垂直居中 */
+  z-index: 1000;           /* 确保在最上层 */
+}
+
+.overlay-content {
+  width: 25%;              /* 宽度占页面的 1/4 */
+  min-width: 300px;        /* 最小宽度，防止在小屏幕上太小 */
+  max-width: 500px;        /* 最大宽度，防止在大屏幕上太宽 */
+  background: white;
+  border-radius: 8px;      /* 圆角 */
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);  /* 阴影增强立体感 */
+}
+
+.overlay-content h4 {
+  margin-top: 0;
+  margin-bottom: 16px;     /* 标题与内容间距 */
+  color: #333;
+  font-size: 1.2em;
+}
+
+.overlay-content p {
+  margin: 12px 0;         /* 上下间距 12px，左右 0 */
+  line-height: 1.5;       /* 行高 1.5 倍，提高可读性 */
+  color: #555;
+  text-align: left;       /* 左对齐 */
+}
+
+.overlay-actions {
+  margin-top: 20px;       /* 操作按钮与上方内容的间距 */
+  display: flex;
+  gap: 5px;
+  justify-content: flex-end;  /* 按钮靠右 */
+}
+
+.cancel-btn {
+  padding: 8px 16px;
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cancel-btn:hover {
+  background: #e0e0e0;    /* 悬停效果 */
+}
+
+.alert-window {
   position: fixed;
   top: 0;
   left: 0;
@@ -377,7 +527,7 @@ button:disabled {
   z-index: 1000;
 }
 
-.overlay-content {
+.alert-content {
   background: white;
   padding: 20px;
   border-radius: 8px;
@@ -385,17 +535,17 @@ button:disabled {
   max-width: 90%;
 }
 
-.overlay-content h4 {
+.alert-content h4 {
   margin: 0 0 15px 0;
   color: #2c3e50;
 }
 
-.overlay-content p {
+.alert-content p {
   margin: 0 0 20px 0;
   color: #666;
 }
 
-.overlay-actions {
+.alert-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;

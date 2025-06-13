@@ -38,11 +38,27 @@ export const queryDeviceList = () => {
 };
 
 // 模型删除接口
-export const deleteModel = (data: {model_id: string;}) => {
+export const deleteModel = (data: { model_id: string }) => {
   return axios.delete(`${BASE_URL}/delete_model`, { data });
-}
+};
 
 // 设备删除接口
-export const deleteDevice = (data: {device_id: string;}) => {
+export const deleteDevice = (data: { device_id: string }) => {
   return axios.delete(`${BASE_URL}/delete_device`, { data });
-}
+};
+
+// 更新模型信息接口
+export const updateModel = (data: { version: string; storage_path: string }) => {
+  return axios.put(`${BASE_URL}/update_model`, data);
+};
+
+// 更新设备信息接口
+export const updateDevice = (data: {
+  cpu: string;
+  gpu: string;
+  ram: string;
+  endpoint_url: string;
+  status: string;
+}) => {
+  return axios.put(`${BASE_URL}/update_device`, data);
+};

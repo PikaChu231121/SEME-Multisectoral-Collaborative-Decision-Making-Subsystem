@@ -55,6 +55,9 @@
                 <div class="model-id">模型ID：{{ model.model_id }}</div>
               </div>
               <div class="card-btn-group">
+                <button class="card-btn update-btn" @click="showUpdate(model)">
+                  更新
+                </button>
                 <button class="card-btn detail-btn" @click="showDetail(model)">
                   详情
                 </button>
@@ -69,8 +72,31 @@
     </div>
   </div>
 
+  <!-- 更新弹窗 -->
+  <div v-if="showUpdateModal" class="detail-overlay">
+    <div class="overlay-content">
+      <h4>更新模型</h4>
+      <form @submit.prevent="handleUpdate">
+        <div class="form-group">
+          <label>版本号</label>
+          <input v-model="updateForm.version" type="text" required />
+        </div>
+        <div class="form-group">
+          <label>存储路径</label>
+          <input v-model="updateForm.storage_path" type="text" required />
+        </div>
+        <div class="overlay-actions">
+          <button type="button" class="cancel-btn" @click="showUpdateModal = false">返回</button>
+          <button type="submit" class="confirm-btn" :disabled="isUpdating">
+            {{ isUpdating ? '更新中...' : '提交更新' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- 详情弹窗 -->
-  <div v-if="showDetailModal" class="overlay">
+  <div v-if="showDetailModal" class="detail-overlay">
     <div class="overlay-content">
       <h4>模型详情</h4>
       <p>模型ID：{{ selectedModel.model_id }}</p>
@@ -83,11 +109,11 @@
   </div>
 
   <!-- 删除确认弹窗 -->
-  <div v-if="showDeleteConfirm" class="overlay">
-    <div class="overlay-content">
+  <div v-if="showDeleteConfirm" class="alert-window">
+    <div class="alert-content">
       <h4>确认删除</h4>
       <p>确定要删除此模型吗？此操作不可恢复。</p>
-      <div class="overlay-actions">
+      <div class="alert-actions">
         <button class="cancel-btn" @click="showDeleteConfirm = false">取消</button>
         <button class="confirm-btn" @click="handleDelete" :disabled="isDeleting">
           {{ isDeleting ? '删除中...' : '确认删除' }}
@@ -98,7 +124,7 @@
 </template>
 
 <script>
-import { registerModel, queryModelList, deleteModel } from '@/api/backend/api/splitTab';
+import { registerModel, queryModelList, deleteModel, updateModel } from '@/api/backend/api/splitTab';
 
 export default {
   name: 'ModelRegisterForm',
@@ -110,11 +136,17 @@ export default {
         version: '',
         storage_path: ''
       },
+      updateForm: {
+        version: '',
+        storage_path: ''
+      },
       isLoading: false,
+      isUpdating: false,
       loading: false,
       error: null,
       modelList: [],
       showDetailModal: false,
+      showUpdateModal: false,
       selectedModel: null,
       showDeleteConfirm: false,
       isDeleting: false,
@@ -129,6 +161,7 @@ export default {
     }
   },
   methods: {
+    // 提交注册表单
     async handleSubmit() {
       this.isLoading = true;
       try {
@@ -141,6 +174,7 @@ export default {
         this.isLoading = false;
       }
     },
+    // 查询模型列表
     async fetchModelList() {
       this.loading = true;
       this.error = null;
@@ -154,6 +188,7 @@ export default {
         this.loading = false;
       }
     },
+    // 清空表单
     resetForm() {
       this.formData = {
         model_id: '',
@@ -161,14 +196,17 @@ export default {
         storage_path: ''
       };
     },
+    // 详细信息
     showDetail(model) {
       this.selectedModel = model;
       this.showDetailModal = true;
     },
+    // 删除确认提示
     confirmDelete(modelId) {
       this.modelToDelete = modelId;
       this.showDeleteConfirm = true;
     },
+    // 删除模型
     async handleDelete() {
       if (!this.modelToDelete) return;
 
@@ -184,6 +222,35 @@ export default {
         this.$message.error(error.response?.data?.message || '删除失败');
       } finally {
         this.isDeleting = false;
+      }
+    },
+    // 填写更新前信息
+    showUpdate(model) {
+      this.selectedModel = model;
+      this.updateForm = {
+        version: model.version,
+        storage_path: model.storage_path
+      };
+      this.showUpdateModal = true;
+    },
+    // 提交更新
+    async handleUpdate() {
+      if (!this.selectedModel) return;
+      
+      this.isUpdating = true;
+      try {
+        await updateModel({
+          model_id: this.selectedModel.model_id,
+          ...this.updateForm
+        });
+        this.$message.success('更新成功');
+        this.showUpdateModal = false;
+        // 重新加载列表
+        await this.fetchModelList();
+      } catch (error) {
+        this.$message.error(error.response?.data?.message || '更新失败');
+      } finally {
+        this.isUpdating = false;
       }
     }
   }
@@ -316,6 +383,14 @@ button:disabled {
   background: #c0392b;
 }
 
+.update-btn {
+  background: #3498db;
+}
+
+.update-btn:hover {
+  background: #2980b9;
+}
+
 .loading {
   text-align: center;
   padding: 20px;
@@ -329,7 +404,64 @@ button:disabled {
 }
 
 /* 弹窗样式 */
-.overlay {
+.detail-overlay {
+  position: fixed;  /* 固定定位，覆盖整个页面 */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);  /* 半透明黑色遮罩 */
+  display: flex;
+  justify-content: center;  /* 水平居中 */
+  align-items: center;     /* 垂直居中 */
+  z-index: 1000;           /* 确保在最上层 */
+}
+
+.overlay-content {
+  width: 25%;              /* 宽度占页面的 1/4 */
+  min-width: 300px;        /* 最小宽度，防止在小屏幕上太小 */
+  max-width: 500px;        /* 最大宽度，防止在大屏幕上太宽 */
+  background: white;
+  border-radius: 8px;      /* 圆角 */
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);  /* 阴影增强立体感 */
+}
+
+.overlay-content h4 {
+  margin-top: 0;
+  margin-bottom: 16px;     /* 标题与内容间距 */
+  color: #333;
+  font-size: 1.2em;
+}
+
+.overlay-content p {
+  margin: 12px 0;         /* 上下间距 12px，左右 0 */
+  line-height: 1.5;       /* 行高 1.5 倍，提高可读性 */
+  color: #555;
+  text-align: left;       /* 左对齐 */
+}
+
+.overlay-actions {
+  margin-top: 20px;       /* 操作按钮与上方内容的间距 */
+  display: flex;
+  gap: 5px;
+  justify-content: flex-end;  /* 按钮靠右 */
+}
+
+.cancel-btn {
+  padding: 8px 16px;
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cancel-btn:hover {
+  background: #e0e0e0;    /* 悬停效果 */
+}
+
+.alert-window {
   position: fixed;
   top: 0;
   left: 0;
@@ -342,7 +474,7 @@ button:disabled {
   z-index: 1000;
 }
 
-.overlay-content {
+.alert-content {
   background: white;
   padding: 20px;
   border-radius: 8px;
@@ -350,17 +482,17 @@ button:disabled {
   max-width: 90%;
 }
 
-.overlay-content h4 {
+.alert-content h4 {
   margin: 0 0 15px 0;
   color: #2c3e50;
 }
 
-.overlay-content p {
+.alert-content p {
   margin: 0 0 20px 0;
   color: #666;
 }
 
-.overlay-actions {
+.alert-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
