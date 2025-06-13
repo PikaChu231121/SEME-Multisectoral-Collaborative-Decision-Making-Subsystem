@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:5002';
+const BASE_URL = 'http://localhost:5000';
 
 // 模型注册接口
 export const registerModel = (data: {
@@ -61,4 +61,14 @@ export const updateDevice = (data: {
   status: string;
 }) => {
   return axios.put(`${BASE_URL}/update_device`, data);
+};
+
+// 调用分割算法接口
+export const handleSPDetect = (data: {
+  model_id: string;
+  edge_id: string;
+  server_id: string;
+  input_text: string;
+}) => {
+  return axios.post(`${BASE_URL}/detect_split_point`, data);
 };

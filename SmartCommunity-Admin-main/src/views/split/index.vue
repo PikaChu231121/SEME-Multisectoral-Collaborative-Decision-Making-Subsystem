@@ -88,14 +88,20 @@ export default {
     async fetchHistoryRecords() {
       this.loading = true;
       try {
-        const response = await getSplitHistory({
+        const { data: response } = await getSplitHistory({
           page: this.currentPage,
           page_size: this.pageSize
         });
-        this.historyRecords = response.records;
-        this.totalPages = Math.ceil(response.total/this.pageSize);
+        if (response && response.records) {
+          this.historyRecords = response.records;
+          this.totalPages = Math.ceil(response.total/this.pageSize);
+        } else {
+          console.error('返回数据格式不正确:', response);
+          this.$message.error('获取数据失败：返回格式不正确');
+        }
       } catch (error) {
         console.error('获取历史记录失败:', error);
+        this.$message.error('获取历史记录失败');
       } finally {
         this.loading = false;
       }
