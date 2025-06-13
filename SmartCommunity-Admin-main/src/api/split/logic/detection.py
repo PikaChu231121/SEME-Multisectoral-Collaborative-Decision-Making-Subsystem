@@ -8,6 +8,8 @@ from utils.split_algorithm import find_optimal_split
 # 分割点检测主流程接口
 # -----------------------
 
+last_bandwidth = 100.0
+
 def detect_split_point(model_id, edge_id, server_id, input_text):
     db = SessionLocal()
     
@@ -18,7 +20,7 @@ def detect_split_point(model_id, edge_id, server_id, input_text):
 
         # 1. 调用 edge 执行评估
         edge_response = requests.post(
-            f"{edge['endpoint_url']}/run_edge",
+            f"{edge.endpoint_url}/run_edge",
             json={"model_path": model_path, "input_text": input_text},
             timeout=10
         )
@@ -26,26 +28,35 @@ def detect_split_point(model_id, edge_id, server_id, input_text):
 
         # 2. 调用 server 执行评估
         server_response = requests.post(
-            f"{server['endpoint_url']}/run_server",
+            f"{server.endpoint_url}/run_server",
             json={"model_path": model_path, "input_text": input_text},
             timeout=10
         )
         server_data = server_response.json()
 
         # 3. 带宽探测
-        bw_response = requests.post(
-            f"{server['endpoint_url']}/detect_bandwidth",
-            json={"target_url": f"{edge['endpoint_url']}/echo"},
-            timeout=10
-        )
-        bandwidth = bw_response.json().get("bandwidth", 1.0)
+        global last_bandwidth
+        for _ in range(10):
+            bw_response = requests.post(
+                f"{server.endpoint_url}/detect_bandwidth",
+                json={"target_url": f"{edge.endpoint_url}/echo"},
+                timeout=10
+            )
+            bandwidth = bw_response.json().get("bandwidth", last_bandwidth)
+            if bandwidth > 0:
+                break
+        if bandwidth == 0:
+            bandwidth = last_bandwidth
+        last_bandwidth = max(bandwidth, 0.1)  # 确保带宽不为0
 
         # 4. 合并层评估数据
-        latencies = edge_data["latency"] + server_data["latency"]
-        outputs = edge_data["output_size"] + server_data["output_size"]
-        names = edge_data["layer_names"] + server_data["layer_names"]
+        client_latencies = edge_data["latency"]
+        server_latencies = server_data["latency"]
+        outputs = server_data["output_size"]
+        names = server_data["layer_names"]
 
-        split, delay = find_optimal_split(latencies, outputs, bandwidth)
+        split, delay = find_optimal_split(client_latencies, server_latencies, outputs, bandwidth)
+        latencies = client_latencies[:split+1] + server_latencies[split+1:]
         
         # 5. 保存结果到数据库
         task_id = str(uuid.uuid4())
@@ -58,12 +69,12 @@ def detect_split_point(model_id, edge_id, server_id, input_text):
                 "output_size": outputs[i]
             } for i in range(len(latencies))
         ]
-        insert_layer_metrics(db, task_id, layer_metrics)
         insert_split_result(
             db, task_id, model_id, edge_id, server_id,
             input_text, bandwidth, split, delay,
-            created_at=datetime.utcnow()
+            created_at=datetime.datetime.utcnow()
         )
+        insert_layer_metrics(db, task_id, layer_metrics)
     finally:
         db.close()
 
