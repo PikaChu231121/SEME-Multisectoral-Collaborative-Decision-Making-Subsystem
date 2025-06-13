@@ -3,13 +3,13 @@
     <!-- 顶部注册区域 -->
     <div class="register-section">
       <div class="register-card">
-        <ModelRegisterForm
+        <ModelTab
           @success="handleModelRegisterSuccess"
           @error="handleRegisterError"
         />
       </div>
       <div class="register-card">
-        <DeviceRegisterForm
+        <DeviceTab
           @success="handleDeviceRegisterSuccess"
           @error="handleRegisterError"
         />
@@ -22,9 +22,10 @@
       <div v-if="loading" class="loading">加载中...</div>
       <template v-else>
         <HistoryRecordItem
-          v-for="record in historyRecords"
+          v-for="record in processedRecords"
           :key="record.task_id"
           :record="record"
+          :detail-data="getDetailData(record.task_id)"
         />
         
         <!-- 分页控制 -->
@@ -49,16 +50,16 @@
 </template>
 
 <script>
-import ModelRegisterForm from '@/views/split/components/ModelRegisterForm.vue';
-import DeviceRegisterForm from '@/views/split/components/DeviceRegisterForm.vue';
+import ModelTab from '@/views/split/components/ModelTab.vue';
+import DeviceTab from '@/views/split/components/DeviceTab.vue';
 import HistoryRecordItem from '@/views/split/components/HistoryRecordItem.vue';
 import { getSplitHistory } from '@/api/backend/api/splitTab';
 
 export default {
   name: 'SplitView',
   components: {
-    ModelRegisterForm,
-    DeviceRegisterForm,
+    ModelTab,
+    DeviceTab,
     HistoryRecordItem
   },
   data() {
@@ -69,6 +70,16 @@ export default {
       totalPages: 1,
       pageSize: 10
     };
+  },
+  computed: {
+    processedRecords() {
+      return this.historyRecords.map(record => ({
+        task_id: record.task_id,
+        model_id: record.model_id,
+        edge_id: record.edge_id,
+        server_id: record.server_id
+      }));
+    }
   },
   created() {
     this.fetchHistoryRecords();
@@ -81,8 +92,8 @@ export default {
           page: this.currentPage,
           page_size: this.pageSize
         });
-        this.historyRecords = response.data.records;
-        this.totalPages = response.data.total_pages;
+        this.historyRecords = response.records;
+        this.totalPages = Math.ceil(response.total/this.pageSize);
       } catch (error) {
         console.error('获取历史记录失败:', error);
       } finally {
@@ -90,7 +101,9 @@ export default {
       }
     },
     async changePage(page) {
-      if (page < 1 || page > this.totalPages) return;
+      if (page < 1 || page > this.totalPages) {
+        return;
+      }
       this.currentPage = page;
       await this.fetchHistoryRecords();
     },
@@ -102,6 +115,9 @@ export default {
     },
     handleRegisterError(error) {
       this.$message.error(error);
+    },
+    getDetailData(taskId) {
+      return this.historyRecords.find(record => record.task_id === taskId);
     }
   }
 };
@@ -119,12 +135,22 @@ export default {
   grid-template-columns: 1fr 1fr;
   gap: 20px;
   margin-bottom: 30px;
+  align-items: stretch;
 }
 
 .register-card {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.register-card > * {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .history-section {

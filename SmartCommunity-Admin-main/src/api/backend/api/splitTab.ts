@@ -1,12 +1,14 @@
 import axios from 'axios';
 
+const BASE_URL = 'http://localhost:5002';
+
 // 模型注册接口
 export const registerModel = (data: {
   model_id: string;
   version: string;
   storage_path: string;
 }) => {
-  return axios.post('/register_model', data);
+  return axios.post(`${BASE_URL}/register_model`, data);
 };
 
 // 设备注册接口
@@ -17,15 +19,20 @@ export const registerDevice = (data: {
   ram: string;
   endpoint_url: string;
 }) => {
-  return axios.post('/register_device', data);
+  return axios.post(`${BASE_URL}/register_device`, data);
 };
 
 // 获取历史记录列表
 export const getSplitHistory = (params: { page: number; page_size: number }) => {
-  return axios.get('/get_split_history', { params });
+  return axios.get(`${BASE_URL}/get_split_history`, { params });
 };
 
-// 获取历史记录详情
-export const getSplitHistoryDetail = (taskId: string) => {
-  return axios.get(`/get_split_history?task_id=${taskId}`);
+// 查询模型列表
+export const queryModelList = () => {
+  return axios.get(`${BASE_URL}/query_model_list`);
+};
+
+// 查询设备列表
+export const queryDeviceList = () => {
+  return axios.get(`${BASE_URL}/query_device_list`);
 };

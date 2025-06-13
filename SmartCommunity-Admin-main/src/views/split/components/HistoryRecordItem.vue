@@ -24,9 +24,9 @@
         </div>
 
         <div class="text-result">
-          <h3>最优分割点：第 {{ result.optimal_split }} 层</h3>
-          <p>层名称：{{ result.layer_names[result.optimal_split] }}</p>
-          <p>端到端时延：{{ result.predicted_latency.toFixed(2) }} ms</p>
+          <h3>最优分割点：第 {{ detailData.optimal_split }} 层</h3>
+          <p>层名称：{{ detailData.layer_names[detailData.optimal_split] }}</p>
+          <p>端到端时延：{{ detailData.predicted_latency.toFixed(2) }} ms</p>
         </div>
       </template>
     </div>
@@ -35,12 +35,15 @@
 
 <script>
 import * as echarts from 'echarts';
-import { getSplitHistoryDetail } from '@/api/backend/api/splitTab';
 
 export default {
   name: 'HistoryRecordItem',
   props: {
     record: {
+      type: Object,
+      required: true
+    },
+    detailData: {
       type: Object,
       required: true
     }
@@ -49,7 +52,6 @@ export default {
     return {
       isExpanded: false,
       loading: false,
-      result: null,
       chart: null,
       currentPage: 1,
       totalPages: 1,
@@ -57,28 +59,13 @@ export default {
     };
   },
   methods: {
-    async toggleDetails() {
+    toggleDetails() {
       this.isExpanded = !this.isExpanded;
-      if (this.isExpanded && !this.result) {
-        await this.fetchDetails();
+      if (this.isExpanded) {
+        this.$nextTick(() => this.renderChart());
       }
     },
     
-    async fetchDetails() {
-      this.loading = true;
-      try {
-        const response = await getSplitHistoryDetail(this.record.task_id);
-        this.result = response.data;
-        this.totalPages = Math.ceil(this.result.layer_names.length / this.itemsPerPage);
-        this.currentPage = 1; // Reset to first page after new analysis
-        this.$nextTick(() => this.renderChart());
-      } catch (error) {
-        console.error('获取详情失败:', error);
-      } finally {
-        this.loading = false;
-      }
-    },
-
     renderChart() {
       if (this.chart) this.chart.dispose();
 
@@ -86,12 +73,12 @@ export default {
       this.chart = echarts.init(chartDom);
 
       const start = (this.currentPage - 1) * this.itemsPerPage;
-      const end = Math.min(start + this.itemsPerPage, this.result.layer_names.length);
-      const layersToDisplay = this.result.layer_names.slice(start, end);
-      const latenciesToDisplay = this.result.layer_latencies.slice(start, end);
-      const sizesToDisplay = this.result.output_sizes.slice(start, end);
+      const end = Math.min(start + this.itemsPerPage, this.detailData.layer_names.length);
+      const layersToDisplay = this.detailData.layer_names.slice(start, end);
+      const latenciesToDisplay = this.detailData.layer_latencies.slice(start, end);
+      const sizesToDisplay = this.detailData.output_sizes.slice(start, end);
 
-      const optimalSplitIndex = this.result.optimal_split - start;
+      const optimalSplitIndex = this.detailData.optimal_split - start;
       const formattedLayerNames = layersToDisplay.map((name, index) => {
         return index === optimalSplitIndex ? `{red|${name}}` : name;
       });
