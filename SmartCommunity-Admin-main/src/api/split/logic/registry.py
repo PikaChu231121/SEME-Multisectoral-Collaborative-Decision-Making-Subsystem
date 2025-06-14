@@ -5,7 +5,7 @@ import datetime
 # 设备管理接口
 # -----------------------
 
-def register_device(device_id, cpu, gpu, ram, endpoint_url):
+def register_device(device_id, device_type, cpu, gpu, ram, endpoint_url):
     db = SessionLocal()
     
     try:
@@ -15,6 +15,7 @@ def register_device(device_id, cpu, gpu, ram, endpoint_url):
         
         new_device = Device(
             device_id=device_id,
+            device_type=device_type,  # 设备类型，edge 或 server
             cpu=cpu,
             gpu=gpu,
             ram=ram,
@@ -47,14 +48,18 @@ def delete_device(device_id):
     return {"status": "success", "message": "Device deleted."}
 
 
-def update_device(device_id, cpu=None, gpu=None, ram=None, endpoint_url=None, status=None):
+def update_device(device_id, device_type=None, cpu=None, gpu=None, ram=None, endpoint_url=None, status=None):
     db = SessionLocal()
     
     try:
         device = db.query(Device).filter_by(device_id=device_id).first()
         if not device:
             return {"status": "error", "message": "Device not found."}
-        
+            
+        if device_type:
+            if device_type not in ["edge", "server"]:
+                return {"status": "error", "message": "Invalid device type. Must be 'edge' or 'server'."}
+            device.device_type = device_type
         if cpu:
             device.cpu = cpu
         if gpu:
@@ -86,6 +91,7 @@ def list_devices():
     return [
         {
             "device_id": device.device_id,
+            "device_type": device.device_type,
             "cpu": device.cpu,
             "gpu": device.gpu,
             "ram": device.ram,
@@ -108,6 +114,7 @@ def query_device(device_id):
         
     return {
         "device_id": device.device_id,
+        "device_type": device.device_type,
         "cpu": device.cpu,
         "gpu": device.gpu,
         "ram": device.ram,

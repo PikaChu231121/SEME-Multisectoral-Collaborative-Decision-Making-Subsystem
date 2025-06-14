@@ -6,6 +6,7 @@ from flask_cors import CORS
 from logic.detection import detect_split_point
 from logic.registry import *
 from logic.history import get_split_history
+from logic.deployment import *
 from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
@@ -16,12 +17,13 @@ CORS(app)
 @app.route('/register_device', methods=['POST'])
 def api_register_device():
     data = request.get_json()
-    required = ['device_id', 'cpu', 'gpu', 'ram', 'endpoint_url']
+    required = ['device_id', 'device_type', 'cpu', 'gpu', 'ram', 'endpoint_url']
     if not all(k in data for k in required):
         return jsonify({'error': 'Missing fields'}), 400
 
     result = register_device(
         device_id=data['device_id'],
+        device_type=data['device_type'],
         cpu=data['cpu'],
         gpu=data['gpu'],
         ram=data['ram'],
@@ -50,6 +52,7 @@ def api_update_device():
 
     result = update_device(
         device_id=device_id,
+        device_type=data.get('device_type'),
         cpu=data.get('cpu'),
         gpu=data.get('gpu'),
         ram=data.get('ram'),
@@ -91,7 +94,7 @@ def api_heartbeat():
         device_id=device_id,
         endpoint_url=endpoint_url
     )
-    return jsonify(result)
+    return jsonify(result), (200 if result['status'] == 'success' else 404)
 
 
 # -------------------- Model API --------------------
@@ -155,6 +158,45 @@ def api_query_model():
     else:
         return jsonify({'error': 'Model not found'}), 404
 
+
+# -------------------- Model Deployment API --------------------
+
+@app.route('/deploy_model', methods=['POST'])
+def api_deploy_model():
+    data = request.get_json()
+    if not data or 'model_id' not in data or 'device_id' not in data:
+        return jsonify({"error": "model_id and device_id required"}), 400
+    result, code = deploy_model_to_device(data['model_id'], data['device_id'])
+    return jsonify(result), code
+
+
+@app.route('/undeploy_model', methods=['POST'])
+def api_undeploy_model():
+    data = request.get_json()
+    if not data or 'model_id' not in data or 'device_id' not in data:
+        return jsonify({"error": "model_id and device_id required"}), 400
+    result, code = undeploy_model_from_device(data['model_id'], data['device_id'])
+    return jsonify(result), code
+
+
+@app.route('/model_devices', methods=['GET'])
+def api_model_devices():
+    model_id = request.args.get('model_id')
+    if not model_id:
+        return jsonify({"error": "model_id query param required"}), 400
+    devices = list_devices_for_model(model_id)
+    return jsonify({"model_id": model_id, "deployed_devices": devices})
+
+
+@app.route('/device_models', methods=['GET'])
+def api_device_models():
+    device_id = request.args.get('device_id')
+    if not device_id:
+        return jsonify({"error": "device_id query param required"}), 400
+    models = list_models_for_device(device_id)
+    return jsonify({"device_id": device_id, "deployed_models": models})
+
+
 # -------------------- Split Point Detection --------------------
 
 @app.route("/detect_split_point", methods=["POST"])
@@ -189,6 +231,7 @@ def api_detect_split_point():
     else:
         return jsonify({'error': 'Failed to detect split point'}), 500
 
+
 # -------------------- History Query --------------------
 
 @app.route("/get_split_history", methods=["GET"])
@@ -198,8 +241,12 @@ def api_get_split_history():
     results = get_split_history(page=page, page_size=page_size)
     return jsonify(results)
 
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5002)
     scheduler = BackgroundScheduler()
     scheduler.add_job(mark_offline_devices, 'interval', seconds=10)
     scheduler.start()
+    print("Scheduler started. Marking offline devices every 10 seconds.")
+    
+    app.run(host='0.0.0.0', port=5002)
+    

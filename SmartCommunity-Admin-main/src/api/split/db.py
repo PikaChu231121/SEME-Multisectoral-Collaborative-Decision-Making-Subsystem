@@ -18,6 +18,7 @@ Base = declarative_base()
 class Device(Base):
     __tablename__ = "devices"
     device_id      = Column(String(64), primary_key=True, index=True)
+    device_type    = Column(String(6), nullable=False, default="edge")
     cpu            = Column(String(128))
     gpu            = Column(String(128))
     ram            = Column(String(64))
@@ -33,6 +34,12 @@ class Model(Base):
     version = Column(String(32))
     storage_path = Column(String(255))
     upload_time = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class ModelDeployment(Base):
+    __tablename__ = "model_deployments"
+    model_id = Column(String(64), ForeignKey("models.model_id", ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
+    device_id = Column(String(64), ForeignKey("devices.device_id", ondelete="CASCADE", onupdate="CASCADE"), primary_key=True)
 
 
 class SplitPointResult(Base):

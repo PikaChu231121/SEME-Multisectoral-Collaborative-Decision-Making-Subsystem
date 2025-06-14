@@ -11,19 +11,20 @@
 - **URL**: `/register_device`
 - **方法**: `POST`
 - **请求参数** (JSON):
-  - device_id: string  设备唯一标识
-  - cpu: string  CPU 信息
-  - gpu: string  GPU 信息
-  - ram: string  内存信息
-  - endpoint_url: string  设备访问地址
+  - device_id: string 设备唯一标识
+  - device_type: string 设备类型
+  - cpu: string CPU 信息
+  - gpu: string GPU 信息
+  - ram: string 内存信息
+  - endpoint_url: string 设备访问地址
 - **返回值** (JSON):
-  - 成功: { "status": string, "message": string }
-  - 设备已存在: { "status": string, "message": string }
+  - 成功: { "status": "success", "message": string }
+  - 设备已存在: { "status": "exists", "message": string }
+  - 失败: { "status": string, "message": string }
 - **响应状态码**:
   - 200 OK (成功)
-  - 400 Bad Request (缺失字段)
-  - 403 Forbidden (已经注册)
-  - 500 Internal Server Error (内部错误)
+  - 403 Forbidden (设备已存在)
+  - 500 Internal Server Error (其他错误)
 
 ### 1.2 查询设备信息
 
@@ -59,35 +60,35 @@
 - **URL**: `/update_device`
 - **方法**: `PUT`
 - **请求参数** (JSON):
-  - device_id: string  设备唯一标识
-  - cpu: string  (可选) CPU 信息
-  - gpu: string  (可选) GPU 信息
-  - ram: string  (可选) 内存信息
-  - endpoint_url: string  (可选) 设备访问地址
-  - status: string  (可选) 设备状态 ∈ { "online", "offline" }
+  - device_id: string 设备唯一标识
+  - device_type: string (可选) 设备类型
+  - cpu: string (可选) CPU 信息
+  - gpu: string (可选) GPU 信息
+  - ram: string (可选) 内存信息
+  - endpoint_url: string (可选) 设备访问地址
+  - status: string (可选) 设备状态 ∈ { "online", "offline" }
 - **返回值** (JSON):
-  - 成功: { "status": string, "message": string }
-  - 失败: { "error": string }
+  - 成功: { "status": "success", "message": string }
+  - 失败: { "status": string, "message": string }
 - **响应状态码**:
   - 200 OK (成功)
-  - 400 Bad Request (缺少 device_id)
-  - 404 Not Found (设备不存在)
-  - 500 Internal Server Error (内部错误)
+  - 404 Not Found (设备未找到)
+  - 400 Bad Request (错误请求)
+  - 500 Internal Server Error (其他错误)
 
 ### 1.5 设备心跳
 
 - **URL**: `/heartbeat`
 - **方法**: `POST`
 - **请求参数** (JSON):
-  - device_id: string  设备唯一标识
-  - endpoint_url: string  设备访问地址 (可选)
+  - device_id: string 设备唯一标识
+  - endpoint_url: string (可选) 设备访问地址
 - **返回值** (JSON):
-  - 成功: { "status": string, "message": string }
+  - 成功: { "status": "success", "message": string }
   - 失败: { "error": string }
 - **响应状态码**:
   - 200 OK (成功)
-  - 400 Bad Request (缺少 device_id)
-  - 404 Not Found (设备不存在)
+  - 404 Not Found (设备未找到)
 
 ### 1.6 查询设备列表
 
@@ -183,10 +184,10 @@
 - **URL**: `/detect_split_point`
 - **方法**: `POST`
 - **请求参数** (JSON):
-  - model_id: string  模型标识
-  - edge_id: string  边缘设备标识
-  - server_id: string  服务器设备标识
-  - input_text: string  输入文本
+  - model_id: string 模型标识
+  - edge_id: string 边缘设备标识
+  - server_id: string 服务器设备标识
+  - input_text: string 输入文本
 - **返回值** (JSON):
   - 成功: {
       "optimal_split": number,
@@ -198,8 +199,8 @@
   - 失败: { "error": string }
 - **响应状态码**:
   - 200 OK (成功)
-  - 400 Bad Request (参数错误)
-  - 404 Not Found (模型/边缘设备/服务器设备不存在)
+  - 400 Bad Request (缺失或类型错误)
+  - 404 Not Found (设备或模型不存在)
   - 500 Internal Server Error (服务错误)
 
 ---
@@ -239,3 +240,63 @@
 - **响应状态码**:
   - 200 OK (成功)
   - 400 Bad Request (参数错误)
+
+---
+
+## 5. 模型部署接口
+
+### 5.1 部署模型
+
+- **URL**: `/deploy_model`
+- **方法**: `POST`
+- **请求参数** (JSON):
+  - model_id: string 模型唯一标识
+  - device_id: string 设备唯一标识
+- **返回值** (JSON):
+  - 成功: { "status": "success", "message": string }
+  - 失败: { "error": string }
+- **响应状态码**:
+  - 200 OK (成功)
+  - 400 Bad Request (缺少参数)
+  - 其他状态码依据错误内容
+
+### 5.2 卸载模型
+
+- **URL**: `/undeploy_model`
+- **方法**: `POST`
+- **请求参数** (JSON):
+  - model_id: string 模型唯一标识
+  - device_id: string 设备唯一标识
+- **返回值** (JSON):
+  - 成功: { "status": "success", "message": string }
+  - 失败: { "error": string }
+- **响应状态码**:
+  - 200 OK (成功)
+  - 400 Bad Request (缺少参数)
+  - 其他状态码依据错误内容
+
+### 5.3 模型部署设备查询
+
+- **URL**: `/model_devices`
+- **方法**: `GET`
+- **请求参数** (QueryString):
+  - model_id: string 模型唯一标识
+- **返回值** (JSON):
+  - 成功: { "model_id": string, "deployed_devices": [ string, ... ] }
+  - 失败: { "error": string }
+- **响应状态码**:
+  - 200 OK (成功)
+  - 400 Bad Request (缺少 model_id)
+
+### 5.4 设备部署模型查询
+
+- **URL**: `/device_models`
+- **方法**: `GET`
+- **请求参数** (QueryString):
+  - device_id: string 设备唯一标识
+- **返回值** (JSON):
+  - 成功: { "device_id": string, "deployed_models": [ string, ... ] }
+  - 失败: { "error": string }
+- **响应状态码**:
+  - 200 OK (成功)
+  - 400 Bad Request (缺少 device_id)
