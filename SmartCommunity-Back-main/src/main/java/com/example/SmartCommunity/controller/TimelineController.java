@@ -88,7 +88,9 @@ public class TimelineController {
     public ResponseEntity<String> runScriptAsync() {
         executorService.submit(() -> {
             try {
-                String pythonPath = "D:/anaconda/envs/open_manus/python.exe";
+                // D:/anaconda/envs/open_manus/python.exe
+                // D:/ProgramData/Anaconda3/envs/camel/python.exe
+                String pythonPath = "D:/ProgramData/Anaconda3/envs/camel/python.exe";
                 String scriptPath = new File("scripts/workforce.py").getAbsolutePath();
                 ProcessBuilder processBuilder = new ProcessBuilder(pythonPath, scriptPath);
                 processBuilder.redirectErrorStream(true);
