@@ -88,8 +88,8 @@ public class TimelineController {
     public ResponseEntity<String> runScriptAsync() {
         executorService.submit(() -> {
             try {
-                String pythonPath = "D:/anaconda/envs/open_manus/python.exe";
-                String scriptPath = new File("scripts/workforce.py").getAbsolutePath();
+                String pythonPath = "D:\\Junior\\SEM&SEE\\SEME-Multisectoral-Collaborative-Decision-Making-Subsystem\\SmartCommunity-Admin-main\\.venv\\Scripts\\python.exe";
+                String scriptPath = new File("Camel_AI/workforce.py").getAbsolutePath();
                 ProcessBuilder processBuilder = new ProcessBuilder(pythonPath, scriptPath);
                 processBuilder.redirectErrorStream(true);
                 processBuilder.environment().put("PYTHONIOENCODING", "utf-8");

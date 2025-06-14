@@ -45,9 +45,9 @@ class ModelDeployment(Base):
 class SplitPointResult(Base):
     __tablename__ = "split_point_results"
     task_id = Column(String(64), primary_key=True)
-    model_id = Column(String(64), ForeignKey("models.model_id"))
-    edge_id = Column(String(64), ForeignKey("devices.device_id"))
-    server_id = Column(String(64), ForeignKey("devices.device_id"))
+    model_id = Column(String(64), ForeignKey("models.model_id", ondelete="CASCADE", onupdate="CASCADE"))
+    edge_id = Column(String(64), ForeignKey("devices.device_id", ondelete="CASCADE", onupdate="CASCADE"))
+    server_id = Column(String(64), ForeignKey("devices.device_id", ondelete="CASCADE", onupdate="CASCADE"))
     input_text = Column(Text)
     bandwidth = Column(Float)
     optimal_split = Column(Integer)

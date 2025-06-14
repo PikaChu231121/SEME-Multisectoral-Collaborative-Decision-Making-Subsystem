@@ -6,17 +6,22 @@
         <h1>响应历史记录</h1>
         <p>查看历史火灾应急响应方案</p>
       </div>
-      <el-button type="primary" :loading="loading" @click="fetchResponseHistory" class="refresh-btn">
-        <i class="el-icon-refresh" v-if="!loading"></i>
+      <el-button
+        type="primary"
+        :loading="loading"
+        class="refresh-btn"
+        @click="fetchResponseHistory"
+      >
+        <i v-if="!loading" class="el-icon-refresh" />
         {{ loading ? '加载中...' : '刷新历史记录' }}
       </el-button>
     </div>
 
     <!-- 历史记录表格 -->
     <div class="history-table-container">
-      <el-table 
-        :data="sortedHistoryData" 
-        border 
+      <el-table
+        :data="sortedHistoryData"
+        border
         style="width: 100%"
         :header-cell-style="{
           background: '#f5f7fa',
@@ -24,11 +29,11 @@
           fontWeight: 'bold',
           fontSize: '14px',
           textAlign: 'center',
-          height: '50px'
+          height: '50px',
         }"
         :cell-style="{
           textAlign: 'center',
-          padding: '12px 0'
+          padding: '12px 0',
         }"
       >
         <el-table-column label="事件ID" width="100">
@@ -42,7 +47,7 @@
         <el-table-column prop="createdAt" label="创建时间" width="200">
           <template #default="{ row }">
             <div class="time-cell">
-              <i class="el-icon-time"></i>
+              <i class="el-icon-time" />
               <span>{{ formatTime(row.createdAt) }}</span>
             </div>
           </template>
@@ -51,8 +56,8 @@
         <el-table-column label="部门列表">
           <template #default="{ row }">
             <div class="departments-tags">
-              <el-tag 
-                v-for="dept in formatDepartments(row.departments)" 
+              <el-tag
+                v-for="dept in formatDepartments(row.departments)"
                 :key="dept"
                 :type="getDeptTagType(dept)"
                 class="dept-tag"
@@ -65,12 +70,7 @@
 
         <el-table-column label="操作" width="120">
           <template #default="{ row }">
-            <el-button 
-              type="primary" 
-              size="small" 
-              @click="goToDetail(row.id)"
-              class="detail-btn"
-            >
+            <el-button type="primary" size="small" class="detail-btn" @click="goToDetail(row.id)">
               查看详情
             </el-button>
           </template>
@@ -81,163 +81,164 @@
 </template>
 
 <script>
-import axios from 'axios';
-import { ElMessage } from 'element-plus';
+  import axios from 'axios';
+  import { ElMessage } from 'element-plus';
+  import { baseApiUrl } from '@/utils/request';
 
-export default {
-  name: 'ResponseHistory',
-  data() {
-    return {
-      historyData: [],
-      loading: false
-    };
-  },
-  computed: {
-    // 根据创建时间降序排列
-    sortedHistoryData() {
-      return [...this.historyData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    }
-  },
-  methods: {
-    async fetchResponseHistory() {
-      this.loading = true;
-      try {
-        const response = await axios.get('/api/response-history');
-        this.historyData = response.data || [];
-      } catch (error) {
-        console.error('获取历史记录失败:', error);
-        ElMessage.error('加载失败，请稍后重试');
-      } finally {
-        this.loading = false;
-      }
-    },
-    formatTime(datetime) {
-      return new Date(datetime).toLocaleString();
-    },
-    formatDepartments(departmentsJson) {
-      try {
-        const depts = JSON.parse(departmentsJson);
-        return Array.isArray(depts) ? depts : [];
-      } catch {
-        return [];
-      }
-    },
-    getDeptTagType(dept) {
-      const typeMap = {
-        '消防': 'danger',
-        '医院': 'success',
-        '安保': 'primary',
-        '物业': 'warning'
+  export default {
+    name: 'ResponseHistory',
+    data() {
+      return {
+        historyData: [],
+        loading: false,
       };
-      return typeMap[dept] || 'info';
     },
-    goToDetail(id) {
-      this.$router.push({ name: 'response-history-detail', params: { id } });
-    }
-  },
-  mounted() {
-    this.fetchResponseHistory();
-  }
-};
+    computed: {
+      // 根据创建时间降序排列
+      sortedHistoryData() {
+        return [...this.historyData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      },
+    },
+    mounted() {
+      this.fetchResponseHistory();
+    },
+    methods: {
+      async fetchResponseHistory() {
+        this.loading = true;
+        try {
+          const response = await axios.get(`${baseApiUrl}/api/response-history`);
+          this.historyData = response.data || [];
+        } catch (error) {
+          console.error('获取历史记录失败:', error);
+          ElMessage.error('加载失败，请稍后重试');
+        } finally {
+          this.loading = false;
+        }
+      },
+      formatTime(datetime) {
+        return new Date(datetime).toLocaleString();
+      },
+      formatDepartments(departmentsJson) {
+        try {
+          const depts = JSON.parse(departmentsJson);
+          return Array.isArray(depts) ? depts : [];
+        } catch {
+          return [];
+        }
+      },
+      getDeptTagType(dept) {
+        const typeMap = {
+          消防: 'danger',
+          医院: 'success',
+          安保: 'primary',
+          物业: 'warning',
+        };
+        return typeMap[dept] || 'info';
+      },
+      goToDetail(id) {
+        this.$router.push({ name: 'response-history-detail', params: { id } });
+      },
+    },
+  };
 </script>
 
 <style scoped>
-.response-history {
-  padding: 24px;
-  background-color: #f5f7fa;
-  min-height: 100vh;
-}
+  .response-history {
+    min-height: 100vh;
+    padding: 24px;
+    background-color: #f5f7fa;
+  }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  padding: 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-}
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding: 20px;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 8%);
+  }
 
-.header-content h1 {
-  margin: 0;
-  font-size: 24px;
-  color: #1976d2;
-  font-weight: 600;
-}
+  .header-content h1 {
+    margin: 0;
+    color: #1976d2;
+    font-size: 24px;
+    font-weight: 600;
+  }
 
-.header-content p {
-  margin: 8px 0 0;
-  color: #606266;
-  font-size: 14px;
-}
+  .header-content p {
+    margin: 8px 0 0;
+    color: #606266;
+    font-size: 14px;
+  }
 
-.refresh-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease;
-  border-radius: 8px;
-  padding: 10px 16px;
-  font-weight: 500;
-}
+  .refresh-btn {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    font-weight: 500;
+    gap: 6px;
+  }
 
-.refresh-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
-}
+  .refresh-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgb(25 118 210 / 20%);
+  }
 
-.history-table-container {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-}
+  .history-table-container {
+    padding: 20px;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 8%);
+  }
 
-.event-id {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+  .event-id {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-.id-number {
-  width: 32px;
-  height: 32px;
-  background: #1976d2;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-}
+  .id-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #1976d2;
+    color: white;
+    font-weight: 600;
+  }
 
-.time-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  color: #606266;
-}
+  .time-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: #606266;
+  }
 
-.departments-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-}
+  .departments-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
 
-.dept-tag {
-  border-radius: 4px;
-  padding: 4px 8px;
-}
+  .dept-tag {
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
 
-.detail-btn {
-  transition: all 0.2s ease;
-}
+  .detail-btn {
+    transition: all 0.2s ease;
+  }
 
-.detail-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
-}
+  .detail-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgb(25 118 210 / 20%);
+  }
 </style>
