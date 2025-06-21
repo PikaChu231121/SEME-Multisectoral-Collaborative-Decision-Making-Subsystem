@@ -98,6 +98,13 @@ export default {
     },
     // 新增：提交火灾报警信息
     submitFireAlarmInfo() {
+      // 校验所有字段是否填写
+      const requiredFields = ['location', 'level', 'source', 'time', 'weather', 'people'];
+      const emptyField = requiredFields.find(field => !this.fireAlarmInfo[field] || this.fireAlarmInfo[field].trim() === '');
+      if (emptyField) {
+        this.$message.error('请填写必填项');
+        return;
+      }
       axios.post('/api/set-fire-alarm-info', this.fireAlarmInfo)
         .then(() => {
           this.$message.success('报警信息已保存');

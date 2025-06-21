@@ -66,6 +66,9 @@ public class TimelineService {
 
     // 发送数据
     public List<TimelineEntry> getTimelineData() {
+        if (timelineData == null) {
+            return new ArrayList<>();
+        }
         List<TimelineEntry> timeline = new ArrayList<>();
 
 

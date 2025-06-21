@@ -90,7 +90,7 @@ public class TimelineController {
             try {
                 // D:/anaconda/envs/open_manus/python.exe
                 // D:/ProgramData/Anaconda3/envs/camel/python.exe
-                String pythonPath = "D:/ProgramData/Anaconda3/envs/camel/python.exe";
+                String pythonPath = "D:/anaconda/envs/open_manus/python.exe";
                 String scriptPath = new File("scripts/workforce.py").getAbsolutePath();
                 ProcessBuilder processBuilder = new ProcessBuilder(pythonPath, scriptPath);
                 processBuilder.redirectErrorStream(true);
@@ -118,9 +118,9 @@ public class TimelineController {
             // 保存为 JSON 文件，供 Python 脚本读取
             File dir = new File("scripts");
             if (!dir.exists()) dir.mkdirs();
-            FileWriter writer = new FileWriter("scripts/fire_alarm_info.json", false);
-            writer.write(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(info));
-            writer.close();
+            try (Writer writer = new OutputStreamWriter(new FileOutputStream("scripts/fire_alarm_info.json", false), java.nio.charset.StandardCharsets.UTF_8)) {
+                writer.write(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(info));
+            }
             return ResponseEntity.ok("报警信息已保存");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -129,14 +129,17 @@ public class TimelineController {
     }
 
     @GetMapping("/get-fire-alarm-info")
-public Map<String, String> getFireAlarmInfo() {
-    try {
-        File file = new File("scripts/fire_alarm_info.json");
-        if (!file.exists()) return new HashMap<>();
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(file, Map.class);
-    } catch (Exception e) {
-        return new HashMap<>();
+    public Map<String, String> getFireAlarmInfo() {
+        try {
+            File file = new File("scripts/fire_alarm_info.json");
+            if (!file.exists()) return new HashMap<>();
+            ObjectMapper mapper = new ObjectMapper();
+            // 强制用UTF-8读取，彻底解决中文乱码
+            try (InputStreamReader reader = new InputStreamReader(new FileInputStream(file), java.nio.charset.StandardCharsets.UTF_8)) {
+                return mapper.readValue(reader, Map.class);
+            }
+        } catch (Exception e) {
+            return new HashMap<>();
+        }
     }
-}
 }
